@@ -1,10 +1,22 @@
-# Core
-numpy
-pandas
-matplotlib
+# ─── Nükleer Simülasyon Çekirdeği ───────────────────────────────────────────
+numpy>=1.24.0         # Matris ve nümerik hesaplama
+scipy>=1.11.0         # ODE çözücüleri, optimizasyon
+pandas>=2.0.0         # Zaman serisi ve veri analizi
 
-# Simulation
-scipy
+# ─── Görselleştirme ─────────────────────────────────────────────────────────
+matplotlib>=3.7.0     # 2D/3D simülasyon grafikleri
+plotly>=5.15.0        # İnteraktif reaktör dashboard grafikleri
 
-# Interface
-PyQt5
+# ─── Dashboard / Arayüz ──────────────────────────────────────────────────────
+dash>=2.14.0          # Web tabanlı reaktör kontrol paneli
+dash-bootstrap-components>=1.5.0
+
+# ─── Veri Doğrulama ve Konfigürasyon ─────────────────────────────────────────
+pydantic>=2.0.0       # Konfigürasyon şema doğrulama
+
+# ─── Test Araçları ────────────────────────────────────────────────────────────
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# ─── Loglama ─────────────────────────────────────────────────────────────────
+rich>=13.0.0          # Terminal görselleştirme ve renkli loglama

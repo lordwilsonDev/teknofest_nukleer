@@ -12,3 +12,15 @@
 2026-03-04 12:53:28,435 - INFO - Control rods adjusted to 80%
 2026-03-04 12:53:28,435 - INFO - Control rods adjusted to 100%
 2026-03-04 12:53:28,438 - CRITICAL - SCRAM ACTIVATED: TEST SCRAM
+2026-03-04T13:48:03 | INFO     | Reaktör baþlatýldý: TEKNOFEST-NUKLEER-TX1
+2026-03-04T13:48:03 | INFO     | Steady-state baþlangýç koþullarý uygulandý.
+2026-03-04T13:48:03 | INFO     | Kontrol çubuklarý: 60.0% \u2192 70.0%
+2026-03-04T13:48:03 | CRITICAL | \u2622\ufe0f  SCRAM AKTÝF: KRÝTÝK SICAKLIK AÞILDI
+2026-03-04T13:48:42 | INFO     | Reaktör baþlatýldý: TEKNOFEST-NUKLEER-TX1
+2026-03-04T13:48:42 | INFO     | Steady-state baþlangýç koþullarý uygulandý.
+2026-03-04T13:48:42 | INFO     | Kontrol çubuklarý: 60.0% \u2192 70.0%
+2026-03-04T13:48:42 | WARNING  | [ALARM L2] Aþýrý güç: 192.0 MWth > 160.0 MWth
+2026-03-04T13:50:22 | INFO     | Reaktör baþlatýldý: TEKNOFEST-NUKLEER-TX1
+2026-03-04T13:50:22 | INFO     | Steady-state baþlangýç koþullarý uygulandý.
+2026-03-04T13:50:22 | INFO     | Kontrol çubuklarý: 60.0% \u2192 45.0%
+2026-03-04T13:50:22 | WARNING  | [ALARM L2] Aþýrý güç: 192.0 MWth > 160.0 MWth
