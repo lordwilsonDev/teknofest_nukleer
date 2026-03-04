@@ -2,6 +2,7 @@ import random
 import json
 import os
 import logging
+from physics import ReactorPhysics
 
 class ReactorCore:
     def __init__(self, config_path="config.json"):
@@ -15,6 +16,9 @@ class ReactorCore:
         self.coolant_flow = 50.0 # Percentage
         self.scram_active = False
         self.power_mw = 0.0
+        
+        # Physics Engine
+        self.physics = ReactorPhysics()
         
         # Setup Logger
         if not os.path.exists("logs"):
@@ -34,6 +38,7 @@ class ReactorCore:
         else:
             # Fallback defaults
             self.config = {
+                "reactor_name": "SKYGUARD-ALPHA",
                 "initial_state": {"temperature": 300, "pressure": 100, "neutron_flux": 1e8, "control_rod_pos": 0},
                 "thresholds": {"max_temp": 600, "critical_temp": 850, "max_pressure": 150}
             }
@@ -46,34 +51,42 @@ class ReactorCore:
         self.coolant_flow = max(0, min(100, flow))
         self.logger.info(f"Coolant flow adjusted to {self.coolant_flow}%")
 
-    def step(self):
+    def step(self, dt=1.0):
         """Simulate one time step of reactor physics."""
         if self.scram_active:
             self.control_rod_pos = 0
             self.coolant_flow = 100
             
-        # 1. Neutron Flux calculation (simplified)
-        # Exposure of rods increases flux
-        flux_delta = (self.control_rod_pos - 50) * 1e6
-        self.neutron_flux = max(1e6, self.neutron_flux + flux_delta + random.uniform(-1e5, 1e5))
+        # 1. Reactivity and Flux calculation
+        rho = self.physics.calculate_reactivity(
+            self.control_rod_pos, 
+            self.temperature, 
+            self.neutron_flux, 
+            dt
+        )
         
-        # 2. Power calculation
+        # Flux growth is proportional to reactivity
+        flux_delta = rho * self.neutron_flux * dt
+        self.neutron_flux = max(1e6, self.neutron_flux + flux_delta + random.uniform(-1e4, 1e4))
+        
+        # 2. Power calculation (Scaling factor for MW)
         self.power_mw = self.neutron_flux / 1e9 * 10 
         
         # 3. Heat accumulation vs Cooling
         heat_gen = self.power_mw * 2.5
-        heat_removal = (self.coolant_flow / 100.0) * 5.0 * (self.temperature / 300.0)
+        # Cooling is more efficient at higher temperatures
+        heat_removal = (self.coolant_flow / 100.0) * 8.0 * (self.temperature / 300.0)**1.5
         
-        self.temperature += (heat_gen - heat_removal) + random.uniform(-0.5, 0.5)
+        self.temperature += (heat_gen - heat_removal) * dt + random.uniform(-0.2, 0.2)
         
-        # 4. Pressure follows temperature (Ideal gas law-ish)
+        # 4. Pressure follows temperature (Ideal gas law approximation)
         self.pressure = (self.temperature / 300.0) * 100.0 + random.uniform(-0.1, 0.1)
         
         # 5. Safety Checks
         if self.temperature > self.config["thresholds"]["critical_temp"]:
             self.emergency_shutdown("CRITICAL TEMPERATURE OVERLOAD")
         elif self.temperature > self.config["thresholds"]["max_temp"]:
-            self.logger.warning(f"High temperature detected: {self.temperature:.2f}K")
+            self.logger.warning(f"High temperature warning: {self.temperature:.2f}K")
 
     def emergency_shutdown(self, reason="MANUAL SCRAM"):
         if not self.scram_active:
@@ -89,5 +102,6 @@ class ReactorCore:
             "power": f"{self.power_mw:.2f} MW",
             "rods": f"{self.control_rod_pos}%",
             "coolant": f"{self.coolant_flow}%",
-            "scram": "ACTIVE" if self.scram_active else "NOMINAL"
+            "scram": "ACTIVE" if self.scram_active else "NOMINAL",
+            "xe_conc": f"{self.physics.xenon_conc:.2e}"
         }

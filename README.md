@@ -1,195 +1,95 @@
-﻿# ☢️ TEKNOFEST NÜKLEER ENERJİ TEKNOLOJİLERİ: ELİT KOMUTA MERKEZİ
+﻿<div align="center">
+  <img src="./assets/banner.png" alt="TEKNOFEST Nükleer Enerji Banner" width="100%" />
+</div>
+
+<br />
 
 <div align="center">
+  <img src="https://img.shields.io/badge/TEKNOFEST-2026-red?style=for-the-badge&logo=rocket" />
+  <img src="https://img.shields.io/badge/NÜKLEER_ENERJİ-TEKNOLOJİLERİ-blue?style=for-the-badge&logo=atom" />
+  <img src="https://img.shields.io/badge/TENMAK-YÜRÜTÜCÜ-green?style=for-the-badge" />
+</div>
 
-```text
-      .      .
-    .   :  :   .
-  .   :      :   .
- .   :        :   .
- .  :          :  .
- :  :          :  :
- :  :          :  :
- :  :  .::::.  :  :
-  :  : :::::: :  :
-   :  '::::::'  :
-    '.. '::' ..'
-       '::::'
-         '
-   ÇEKİRDEK KRİTİKLİĞİ: KARARLI
-```
+<br />
 
-```text
-    _   _ _   _  ____ _      _____     _     ____      ____  _____  _____ ____  
-   | \ | | | | |/ ___| |    | ____|   / \   |  _ \    |  _ \| ____||  ___/ ___| 
-   |  \| | | | | |   | |    |  _|    / _ \  | |_) |   | |_) |  _|  | |_  \___ \ 
-   | |\  | |_| | |___| |___ | |___  / ___ \ |  _ <    |  __/| |___ |  _|  ___) |
-   |_| \_|\___/ \____|_____||_____|/_/   \_\|_| \_\   |_|   |_____||_|   |____/ 
-                                                                                
-          ⚡ KUANTUM MUHAFAZA VE REAKTÖR KONTROL İZLEME SİSTEMİ ⚡
-```
-
----
-
-### 🛡️ TAKTİKSEL KONTROL PANELİ [S-SEVİYE YETKİ]
-```mermaid
-graph LR
-    subgraph " "
-    A{Ç E K İ R D E K}
-    end
-    A --- B(RAD: 0.1 mSv/h)
-    A --- C(SIC: 342.1K)
-    A --- D(GÜÇ: 1.2GW)
-    
-    style A fill:#000,stroke:#f00,stroke-width:8px,color:#f00,stroke-dasharray: 5 5
-    style B fill:#111,color:#0f0
-    style C fill:#111,color:#0f0
-    style D fill:#111,color:#0f0
-```
-
-| GÖREV VARLIĞI | OPERASYONEL DURUM | VERİ AKIŞI | BÜTÜNLÜK |
-| :--- | :--- | :--- | :--- |
-| **REAKTÖR ALFA** | 🟢 ANA HAT ÇEVRİMİÇİ | `ALINIYOR` | `%100` |
-| **SOĞUTMA DÖNGÜSÜ** | 🟢 SİRKÜLASYONDA | `4.2 kL/s` | `%98.2` |
-| **KONTROL ÇUBUKLARI** | 🟢 HAZIR | `BEKLEMEDE` | `%100` |
-| **GÜVENLİK AĞI** | 🔴 MAKSİMUM | `KİLİTLİ` | `EKSTREM` |
-
+<div align="center">
+  <h1>☢️ TEKNOFEST NÜKLEER ENERJİ TEKNOLOJİLERİ TASARIM YARIŞMASI</h1>
+  <p><b>Milli Teknoloji Hamlesi Işığında, Geleceğin Enerji Mimarisi</b></p>
 </div>
 
 ---
 
-## 🔱 MİSYON KRİTİK GENEL BAKIŞ
-Bu depo, yeni nesil Nükleer Enerji Teknolojileri için tasarlanmış **Misyon Kritik bir Kontrol ve Simülasyon Altyapısıdır**. **TEKNOFEST 2025** kapsamında geliştirilen bu sistem; ileri fizik döngülerini, termal hidrolik dinamikleri ve otonom güvenlik protokollerini simüle eder.
+## � Yarışma Hakkında: Vizyon ve Stratejik Önem
 
-> [!CAUTION]
-> **KISITLI ERİŞİM:** Kontrol algoritmalarının yetkisiz modifikasyonu, sanal reaktörde muhafaza hatasına ve sistem çökmesine yol açabilir.
+TEKNOFEST Havacılık, Uzay ve Teknoloji Festivali kapsamında düzenlenen **Nükleer Enerji Teknolojileri Tasarım Yarışması**, Türkiye’nin enerji bağımsızlığı yolunda attığı en kritik adımlardan biridir. T.C. Enerji ve Tabii Kaynaklar Bakanlığı ile **TENMAK** (Türkiye Enerji, Nükleer ve Maden Araştırma Kurumu) ortaklığında yürütülen bu süreç, sadece bir yarışma değil, aynı zamanda yerli nükleer ekosistemin inşası için bir kuluçka merkezidir. 
 
----
-
-## 📚 TEKNİK ANSİKLOPEDİ: İLERİ NÜKLEER MÜHENDİSLİĞİ
-
-### 1. Nötron Kinetiği ve Difüzyon Teorisi
-Reaktör çekirdeğindeki güç yoğunluğu, nötron akısı $(\phi)$ ile doğrudan bağlantılıdır. Sistemimiz, nötronların ortamdaki hareketini **Fick Yasası** temelinde simüle eder:
-$$J = -D \nabla \phi$$
-Burada $J$ nötron akımı, $D$ ise difüzyon katsayısıdır. Kontrol çubukları (Bor veya Kadmiyum), nötron yutma kesit alanını $(\Sigma_a)$ değiştirerek reaktiviteyi kontrol eder. 
-
-**Gecikmiş Nötronlar (Delayed Neutrons):** Reaktör kontrol edilebilirliğini sağlayan en kritik unsur, fisyon sonrası hemen değil, belirli bir gecikmeyle salınan nötronlardır. Bu $(\beta)$ payı, reaktörün "istem dışı kritik" (prompt critical) olmasını engelleyen emniyet payıdır.
-
-### 2. Termal Hidrolik Dinamikler ve Isı Transferi
-Soğutma sistemimiz, çekirdekten ısıyı uzaklaştırmak için **Navier-Stokes denklemlerini** basitleştirilmiş bir modelle kullanır. Isı transferi, yakıt zarfı (cladding) ve soğutucu arasındaki sıcaklık farkına dayanır:
-$$Q = h \cdot A \cdot (T_{surface} - T_{coolant})$$
-**Leidenfrost Etkisi ve DNB:** Sistem, "Departure from Nucleate Boiling" (DNB) noktasını sürekli izler. Eğer yüzey sıcaklığı çok artarsa, yakıt çubuğu etrafında bir buhar tabakası oluşur ve ısı transferi aniden düşer; bu durum yakıtın erimesine (meltdown) neden olabilir.
-
-### 3. Dördüncü Nesil (Gen-IV) Reaktör Tasarımları
-Simülasyon altyapımız, sadece klasik basınçlı su reaktörlerini (PWR) değil, geleceğin teknolojilerini de kapsayacak esnekliktedir:
-- **Ergimiş Tuz Reaktörleri (MSR):** Yakıtın sıvı halde olduğu, düşük basınçlı ve yüksek güvenlikli tasarımlar.
-- **Hızlı Nötron Reaktörleri (FNR):** Nötronları yavaşlatmadan (moderator kullanmadan) kullanarak nükleer atıkları "yakan" ve toryum döngüsüne izin veren sistemler.
-- **Kurşun Soğutmalı Hızlı Reaktörler (LFR):** Pasif güvenlik özellikleriyle öne çıkan, soğutucu kaybı kazalarına karşı dirençli yapılar.
-
-### 4. Radyasyon Zırhlama ve Malzeme Bilimi
-Nükleer tesislerin ömrü, nötron bombardımanı altındaki malzemelerin dayanıklılığına bağlıdır.
-- **Nötron Gevrekliği:** Çelik reaktör kaplarının zamanla nötronlar nedeniyle elastisitesini kaybetmesi olayı.
-- **Zırhlama Hesapları (Attenuation):** Radyasyon şiddetindeki azalma $I = I_0 e^{-\mu x}$ denklemiyle hesaplanır. Burada $\mu$ lineer zayıflatma katsayısı, $x$ ise zırh kalınlığıdır.
-- **Bragg Peak:** Yüklü parçacıkların enerjilerini doku veya malzeme içinde bıraktığı spesifik derinlik analizi.
-
-### 5. Monte Carlo N-Parçacık (MCNP) Metodolojisi
-Nötronların reaktör içindeki rastgele hareketlerini simüle etmek için "stokastik" yöntemler kullanılır.
-- **Tallies:** Belirli bir bölgedeki nötron akısını veya enerji birikimini ölçmek için kullanılan sanal dedektörler.
-- **Cross-Sections (Kesit Alanları):** Bir nötronun bir çekirdekle etkileşime girme olasılığı $(\sigma)$. Bu veri setleri (ENDF/B-VIII gibi) devasa kütüphanelerden çekilir.
-- **Varyans Azaltma:** Simülasyonun istatistiksel hatasını düşürmek için kullanılan ağırlıklandırma teknikleri.
-
-### 6. Yakıt Çevrimi ve Atık Yönetimi
-"Beşikten mezara" nükleer yakıt yönetimi:
-- **Yeniden İşleme (Reprocessing):** Kullanılmış yakıttaki Plütonyum ve Uranyumun ayrıştırılarak tekrar yakıt yapılması (PUREX süreci).
-- **Derin Jeolojik Depolama:** Radyoaktif atıkların binlerce yıl boyunca güvenle saklanması için geliştirilen bentonit kili ve bakır kapsül teknolojileri.
-- **Toryum Döngüsü:** Uranyuma göre daha bol bulunan ve daha az atık üreten toryum bazlı nükleer gelecek vizyonu.
+Türkiye'nin 2053 net sıfır emisyon hedefleri doğrultusunda nükleer enerji, baz yük güç kaynağı olarak hayati önem taşımaktadır. Bu yarışma, genç mühendislerin bu stratejik alanda "öğrenen sistemler" geliştirmesini, nükleer emniyet kültürünü içselleştirmesini ve uluslararası standartlarda (IAEA, WENRA vb.) tasarım yetkinliği kazanmasını amaçlar. Projemiz, bu vizyonun bir parçası olarak, nükleer teknolojileri sadece teorik düzeyde değil, uygulanabilir mühendislik çözümleri olarak ele almaktadır.
 
 ---
 
-## 🧬 SİSTEM MİMARİSİ VE GİZLİLİK KATMANI
-Sistemimiz, her biri izole edilmiş ve kendi içinde yedekli (redundant) çalışan 4 ana katmandan oluşur.
+## 🏗️ Yarışma Teması: Yeni Nesil Modüler Reaktörler
 
-```mermaid
-graph LR
-    subgraph "Çekirdek Bölgesi"
-    A[Termal Sensörler] --- B((Merkezi Çekirdek))
-    C[Basınç Plakaları] --- B
-    D[Akış Monitörleri] --- B
-    end
+Geleneksel büyük ölçekli nükleer santrallerin yerini almaya başlayan **Modüler Reaktörler**, yarışmanın odak noktasını oluşturmaktadır. Bu tasarımlar, düşük başlangıç sermaye maliyeti, fabrikada seri üretim imkanı ve gelişmiş güvenlik özellikleri ile öne çıkmaktadır.
 
-    subgraph "Kontrol Katmanı"
-    B ==> E{Karar Motoru}
-    E -.->|Otomatik Çubuk| F[Pnömatik Aktüatörler]
-    E -.->|Akış| G[Soğutma Pompaları]
-    end
+### 1. Küçük Modüler Reaktörler (SMR - Small Modular Reactors)
+SMR'lar, tipik olarak 300 MWe'ye kadar güç kapasitesine sahip, modüler yapıda tasarlanan reaktörlerdir. Projemizde SMR tasarımları; pasif soğutma sistemleri, integral basınçlı su reaktörü (iPWR) mimarileri ve yüksek yanma oranlı yakıt döngüleri üzerinden analiz edilmektedir. SMR'ların şebeke esnekliği ve uzak bölgelere enerji sağlama kapasitesi, tasarım parametrelerimizin temelini oluşturur.
 
-    subgraph "Elit Arayüz"
-    E ==> H[Operatör Komuta Merkezi]
-    H --- I[Telemetrik Kayıtlar]
-    end
+### 2. Mikro Modüler Reaktörler (MMR - Micro Modular Reactors)
+Genellikle 1-10 MW güç aralığında olan MMR'lar, "tak-çıkar" (plug-and-play) enerji üniteleri olarak kurgulanmaktadır. Özellikle otonom çalışma kapasitesi ve nakledilebilirlik (transportability) özellikleri, bu kategorideki mühendislik zorluklarının merkezindedir. Hidrit yakıtlar veya erimiş tuz gibi yenilikçi soğutucu teknolojileri bu kapsamda değerlendirilmektedir.
 
-    style B fill:#00ffff,stroke:#fff,stroke-width:4px,color:#000
-    style E fill:#ff0055,color:#fff
-    style H fill:#00ff00,color:#000
-```
+### 3. Çok Amaçlı Yenilikçi Araştırma Reaktörleri
+Radyoizotop üretimi, malzeme testleri ve temel fizik araştırmaları için tasarlanan bu reaktörlerde, yüksek nötron akısı yönetimi ve termal spektrum optimizasyonu en kritik mühendislik alanlarıdır.
 
 ---
 
-## 🛠️ KULLANILAN TEKNOLOJİLER
-- **Mantık Motoru:** Gerçek zamanlı fizik entegrasyonuna sahip `Python 3.10+`.
-- **Veri Hattı:** 10ms altı gecikme için `MQTT` / `WebSockets`.
-- **Güvenlik:** AES-256 şifreli kontrol sinyalleri.
-- **Simülasyon:** Nötron izleme için gelişmiş Monte Carlo algoritmaları.
+## 📊 Detaylı Yarışma Kategorileri ve Teknik İçerik
+
+Yarışma, nükleer mühendisliğin tüm katmanlarını kapsayan **10 spesifik disipline** bölünmüştür. Her bir kategori, karmaşık bir optimizasyon matrisini temsil eder:
+
+### 🔬 Fizik ve Tasarım Optimizasyonu
+*   **Detay Tasarım Kategorisi:** Başından sonuna kadar tüm sistem süreçlerini içeren, reaktör kalbinden enerji çevrimine kadar sistemin tamamının optimize edildiği "büyük resim" kategorisidir.
+*   **Reaktör Kor Tasarımı:** Nötronik hesaplamalar, kritiklik analizleri (K-effective), güç yoğunluğu dağılımı ve nötron spektrum analizlerini içerir. Burada amaç, yakıt verimliliğini maksimize ederken reaktivite geri besleme katsayılarını güvenli aralıkta tutmaktır.
+*   **Nükleer Yakıt ve Atık Yönetimi:** Yakıtın zenginleştirme derecesinden, kullanılmış yakıtın soğuma havuzlarındaki termal analizlerine ve uzun vadeli depolama stratejilerine kadar olan döngüyü kapsar.
+
+### ⚙️ Mühendislik ve Güvenlik Sistemleri
+*   **Pasif Güvenlik Sistemi Tasarımı:** Doğal sirkülasyon, yerçekimi bazlı enjeksiyon ve pasif koruma kabuğu soğutma sistemleri gibi, hiçbir elektrik gücü veya operatör müdahalesi gerektirmeyen "Failsafe" mekanizmaların tasarımıdır.
+*   **Enerji Çevrimi Tasarımı:** Reaktörden elde edilen termal enerjinin Rankine veya Brayton döngüleri kullanılarak maksimum verimle elektriğe dönüştürülmesi; ısı değiştiricilerin (SG) ve türbin sistemlerinin optimizasyonudur.
+*   **Nükleer Enstrümantasyon ve Kontrol (I&C):** Reaktörün "sinir sistemi". Nötron dedektörleri, sıcaklık sensörleri ve SCADA sistemleri ile reaktörün kontrol çubukları üzerinden stabil tutulması ve otonom durdurma (SCRAM) algoritmaları.
 
 ---
 
-## 👨‍✈️ BAŞ MİMAR
-<div align="left">
-<table>
-  <tr>
-    <td width="150"><img src="https://github.com/bahattinyunus.png" width="150"></td>
-    <td>
-      <h3>Bahattin Yunus Çetin</h3>
-      <p><i>Baş Nükleer Sistemler Mimarı ve IT Profesyoneli</i></p>
-      <p>📍 Trabzon, Türkiye | 🏢 Görev Kontrol Merkezi</p>
-      <a href="https://github.com/bahattinyunus"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>
-      <a href="https://www.linkedin.com/in/bahattin-yunus-%C3%A7etin-4130b9255/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"></a>
-    </td>
-  </tr>
-</table>
-</div>
+## 📅 Raporlama ve Değerlendirme Metrikleri
+
+Başarıya giden yol, katı raporlama aşamalarından ve teknik doğrulama süreçlerinden geçer:
+
+1.  **Ön Değerlendirme Raporu (ÖTR):** Tasarımın kavramsal temelleri, seçilen reaktör tipinin rasyoneli ve projenin yenilikçi (inovasyon) yönü sorgulanır. Ekip yapısı ve iş planı bu aşamada kritiktir.
+2.  **Final Değerlendirme Raporu (PDR/CDR):** Burada "Sayılardan Mühendisliğe" geçilir. Simülasyon sonuçları, CAD modelleri, hata ağacı analizleri (Fault Tree Analysis) ve detaylı matematiksel modeller sunulur. Tasarımın IAEA güvenlik standartlarına uyumu en yüksek puan getiren unsurdur.
+3.  **Saha ve Final Sunumları:** Jüri önünde yapılan teknik savunma. Projenin ticarileşme potansiyeli, yerlilik oranı ve mühendislik derinliği canlı olarak test edilir.
 
 ---
 
-## ⚡ AKTİVASYON DİZİNİ
+## 🛠️ Teknik Araç Takımı ve Simülasyon Stratejisi
 
-1.  **Terminali Hazırla:**
-    ```bash
-    git clone https://github.com/bahattinyunus/teknofest_nukleer.git
-    cd teknofest_nukleer
-    ```
+Nükleer tasarımda hata payı sıfıra yakındır. Bu nedenle projemizde yüksek güvenilirlikli (High-Fidelity) araçlar kullanılmaktadır:
 
-2.  **Güvenlik Protokolü Alfa:**
-    ```bash
-    python -m venv venv
-    ./venv/Scripts/activate 
-    pip install -r requirements.txt
-    ```
+*   **OpenMC (Stochastic Neutronics):** Python arayüzü sayesinde karmaşık geometrileri kolayca modelleyebildiğimiz, Monte Carlo yöntemini kullanan nötron taşıma kodu. Yakıtın yanma (depletion) analizleri ve aktivasyon hesaplamaları için ana aracımızdır.
+*   **MOOSE Framework (Multiphysics):** Idaho National Laboratory tarafından geliştirilen, ısı iletimi, yapısal mekanik ve nötronik verileri aynı çözüm ağında (mesh) birleştirmemize olanak tanıyan coupling framework'ü.
+*   **OpenFOAM (Fluid Dynamics):** Reaktör kalbindeki soğutucu akışkanın termal dağılımını ve basınç düşüşlerini analiz etmek için kullanılan CFD kütüphanesi.
+*   **ANSYS / MATLAB:** Kontrol algoritmalarının kararlılık analizleri (Root Locus, Bode Plots) ve yapısal dayanım testleri.
 
-3.  **Reaktör Kalp Atışını Başlat:**
-    ```bash
-    python src/main.py
-    ```
+---
+
+## 🏁 Stratejik Rakip Analizi ve Kaynak Yönetimi
+
+Sektördeki diğer takımlar ve global projelerle yapılan karşılaştırmalar, projemizin konumunu belirler:
+
+*   **Ekosistem Analizi:** Mevcut takımların çoğu akademik reaktör tiplerine odaklanırken, biz **SMR-MMR hibrit yapıları** ve **hızlı nötron spektrumlu** tasarımları odağımıza alarak "teknolojik sıçrama" (leapfrogging) yapmayı hedefliyoruz.
+*   **Açık Kaynak Gücü:** [ARMI](https://github.com/terrapower/armi) gibi endüstri standartlarını kullanarak, tasarım döngü süremizi (Design Cycle) kısaltıyor ve daha fazla iterasyonla daha güvenli bir yapı ortaya koyuyoruz.
+
+[Daha Fazla Detay: Rakip Analizi Dosyası](./competitor_analysis.md)
 
 ---
 
 <div align="center">
-    <h3>🚨 ACİL DURUM YAYINI 🚨</h3>
-    <i>Muhafaza ihlali durumunda, Operatör Paneli üzerinden derhal <b>SCRAM</b> komutunu uygulayın.</i>
-    <br><br>
-    <b>TEKNOFEST 2025 | NÜKLEER ENERJİ TEKNOLOJİLERİ DİVİZYONU</b>
+  <p><b>SKYGUARD AMR-OS | Nükleer Enerji Division</b><br />Mühendislik, Emniyet ve İnovasyon</p>
 </div>
-<p align="center">
-  <img src="https://img.shields.io/badge/Powered%20By-TEKNOFEST-red?style=for-the-badge&logo=rocket&logoColor=white" alt="TEKNOFEST Support">
-</p>
-
