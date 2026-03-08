@@ -1,0 +1,21 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 58 items / 1 error
+
+=================================== ERRORS ====================================
+___________________ ERROR collecting tests/test_reactor.py ____________________
+ImportError while importing test module 'G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer\tests\test_reactor.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\bahat\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_reactor.py:4: in <module>
+    from src.reactor_core import ReactorCore
+E   ModuleNotFoundError: No module named 'src'
+=========================== short test summary info ===========================
+ERROR tests/test_reactor.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+============================== 1 error in 0.34s ===============================

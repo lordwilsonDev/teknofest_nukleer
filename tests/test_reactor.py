@@ -10,7 +10,7 @@ class TestEnhancedReactor(unittest.TestCase):
         cls.test_config = "test_config.json"
         config = {
             "reactor_name": "TEST-UNIT-01",
-            "initial_state": {"temperature": 300, "pressure": 100, "neutron_flux": 1e8, "control_rod_pos": 50},
+            "initial_state": {"temperature": 300, "pressure": 100, "neutron_flux": 1e8, "control_rod_pos": 50, "coolant_flow": 80},
             "thresholds": {"max_temp": 500, "critical_temp": 600, "max_pressure": 150},
             "coefficients": {"heating_rate": 0.1, "cooling_rate": 0.1, "flux_multiplier": 1.0}
         }

@@ -1,0 +1,182 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 62 items
+
+tests\test_core.py ................................                      [ 51%]
+tests\test_physics.py .......................F..                         [ 93%]
+tests\test_reactor.py FFFF                                               [100%]
+
+================================== FAILURES ===================================
+_____________ TestThermalHydraulics.test_no_cooling_at_sink_temp ______________
+
+self = <tests.test_physics.TestThermalHydraulics object at 0x000001413A9A8E50>
+
+    def test_no_cooling_at_sink_temp(self):
+        th = ThermalHydraulics()
+>       assert th.passive_cooling_available(302.0) is True
+E       assert False is True
+E        +  where False = passive_cooling_available(302.0)
+E        +    where passive_cooling_available = <physics.ThermalHydraulics object at 0x000001413A9E1850>.passive_cooling_available
+
+tests\test_physics.py:188: AssertionError
+__________________ TestEnhancedReactor.test_logging_creation __________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_logging_creation>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <[AttributeError("'ReactorCore' object has no attribute 'power_mwth'") raised in repr()] ReactorCore object at 0x1413aa7f590>
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri
+        self.temperature      = float(cfg_state["temperature"])
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+>       self.coolant_flow     = float(cfg_state["coolant_flow"])
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'coolant_flow'
+
+src\reactor_core.py:141: KeyError
+_________________ TestEnhancedReactor.test_physics_step_flux __________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_physics_step_flux>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <[AttributeError("'ReactorCore' object has no attribute 'power_mwth'") raised in repr()] ReactorCore object at 0x1413ab1c5d0>
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri
+        self.temperature      = float(cfg_state["temperature"])
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+>       self.coolant_flow     = float(cfg_state["coolant_flow"])
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'coolant_flow'
+
+src\reactor_core.py:141: KeyError
+___________________ TestEnhancedReactor.test_rod_adjustment ___________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_rod_adjustment>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <[AttributeError("'ReactorCore' object has no attribute 'power_mwth'") raised in repr()] ReactorCore object at 0x1413a9d0510>
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri
+        self.temperature      = float(cfg_state["temperature"])
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+>       self.coolant_flow     = float(cfg_state["coolant_flow"])
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'coolant_flow'
+
+src\reactor_core.py:141: KeyError
+__________________ TestEnhancedReactor.test_scram_mechanics ___________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_scram_mechanics>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <[AttributeError("'ReactorCore' object has no attribute 'power_mwth'") raised in repr()] ReactorCore object at 0x1413ab084d0>
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri
+        self.temperature      = float(cfg_state["temperature"])
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+>       self.coolant_flow     = float(cfg_state["coolant_flow"])
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'coolant_flow'
+
+src\reactor_core.py:141: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_physics.py::TestThermalHydraulics::test_no_cooling_at_sink_temp
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_logging_creation - Ke...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_physics_step_flux - K...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_rod_adjustment - KeyE...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_scram_mechanics - Key...
+======================== 5 failed, 57 passed in 1.18s =========================

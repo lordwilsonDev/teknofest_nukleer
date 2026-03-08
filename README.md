@@ -206,3 +206,4 @@ Rakip analizinden çıkan somut öncelikler:
 <div align="center">
   <p><b>SKYGUARD AMR-OS | Nükleer Enerji Division</b><br />Mühendislik, Emniyet ve İnovasyon</p>
 </div>
+   

@@ -59,7 +59,27 @@ class ReactorEvent:
     timestamp_iso: str
     elapsed_s:     float
     level:         str    # INFO / WARNING / ALARM / CRITICAL
-    message:       str
+    message: str
+
+
+class Telemetry:
+    """Reaktör verilerini tamponlayan ve analiz eden sınıf."""
+    def __init__(self, max_points: int = 1000):
+        self.data: list[ReactorState] = []
+        self.max_points = max_points
+
+    def record(self, state: ReactorState):
+        self.data.append(state)
+        if len(self.data) > self.max_points:
+            self.data.pop(0)
+
+    def get_trend(self, key: str) -> list[float]:
+        """Belirli bir parametrenin (örn. 'temperature_k') geçmişini döndürür."""
+        return [getattr(s, key) for s in self.data if hasattr(s, key)]
+
+    def average(self, key: str) -> float:
+        trend = self.get_trend(key)
+        return sum(trend) / len(trend) if trend else 0.0
 
 
 # ─── Alarm Seviyeleri ─────────────────────────────────────────────────────────
@@ -138,7 +158,7 @@ class ReactorCore:
         self.pressure         = float(cfg_state["pressure"])
         self.neutron_flux     = float(cfg_state["neutron_flux"])
         self.control_rod_pos  = float(cfg_state["control_rod_pos"])
-        self.coolant_flow     = float(cfg_state["coolant_flow"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
         self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
         self.power_mwth       = 0.0
         self.scram_active     = False
@@ -164,9 +184,27 @@ class ReactorCore:
         # Fizik motoru
         self.physics = ReactorPhysics()
 
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+
+        # Doğrulama
+        self._validate_config()
+
         # Logger
         self._setup_logger()
         self._log(logging.INFO, f"Reaktör başlatıldı: {self.config['reactor_name']}")
+
+    def _validate_config(self):
+        """Konfigürasyonun bütünlüğünü kontrol eder."""
+        required_keys = ["reactor_name", "initial_state", "thresholds"]
+        for key in required_keys:
+            if key not in self.config:
+                raise ValueError(f"Eksik konfigürasyon anahtar²: {key}")
+        
+        state_keys = ["temperature", "pressure", "neutron_flux", "control_rod_pos"]
+        for key in state_keys:
+            if key not in self.config["initial_state"]:
+                raise ValueError(f"Eksik initial_state anahtar²: {key}")
 
     def _load_config(self, path: str) -> dict:
         if os.path.exists(path):
@@ -263,7 +301,8 @@ class ReactorCore:
             self.control_rod_pos,
             self.temperature,
             self.neutron_flux,
-            dt
+            dt,
+            burnup=self.burnup_mwdmt
         )
 
         # 2. Nötron akısı (nokta kinetiği üzerinden)
@@ -411,6 +450,7 @@ class ReactorCore:
             alarm_level      = self.alarm_level,
         )
         self._history.append(snap)
+        self.telemetry.record(snap)
         if len(self._history) > self._history_max:
             self._history.pop(0)
 

@@ -104,8 +104,12 @@ class XenonPoisoning:
         self.xenon = max(0.0, self.xenon + dXe * dt)
 
         # Lineer reaktivite modeli: ρ_Xe = -σ_a * Xe / Σ_f (normalize)
-        rho_xe = -(self.SIGMA_A_XE135 * self.xenon) / 5.0e19
-        return max(-0.10, rho_xe)   # Fiziksel sınır: en fazla -10000 pcm
+        # Daha gerçekçi bir bölü katsayısı ve Xe-pit durumları için limitler
+        sigma_f = 5.0e19  # Normalize fisyon tesir kesiti yakla■²m²
+        rho_xe = -(self.SIGMA_A_XE135 * self.xenon) / sigma_f
+        
+        # Xe-pit (peak) durumunda reaktivite cezas² %5-7'ye kadar ç²kabilir
+        return max(-0.15, rho_xe) 
 
 
 class SamariumPoisoning:
@@ -161,7 +165,7 @@ class ThermalHydraulics:
 
     def passive_cooling_available(self, T_cool: float) -> bool:
         """Pasif soğutma yeterli mi? (Havuz sıcaklığı < 90°C üstü = aktif)"""
-        return (T_cool - self.T_SINK) > 5.0
+        return (T_cool - self.T_SINK) > 1.0
 
 
 class ReactorPhysics:
@@ -214,14 +218,15 @@ class ReactorPhysics:
         return rho_xe
 
     def calculate_reactivity(self, rod_pos: float, temp: float,
-                             flux: float, dt: float = 1.0) -> float:
+                             flux: float, dt: float = 1.0, burnup: float = 0.0) -> float:
         """
         Toplam reaktivite hesabı (Δk/k).
 
-        ρ_tot = ρ_rod + ρ_Doppler + ρ_Xe135 + ρ_Sm149
+        ρ_tot = ρ_rod + ρ_Doppler + ρ_Xe135 + ρ_Sm149 + ρ_burnup
 
         rod_pos : 0 (tam içeri) → 100 (tam dışarı) [%]
         """
+        self.burnup_mwdmt_val = burnup # Temporarily store for ease of use in logic
         # Kontrol çubuğu reaktivitesi
         # Nötron değerini simüle etmek için sigmoid eğrisi
         rod_worth_total = 0.12  # Toplam çubuk değeri ≈ 12% Δk/k (tipik PWR)
@@ -238,11 +243,16 @@ class ReactorPhysics:
         rho_xe = self.xenon.step(flux, dt)
         rho_sm = self.samarium.step(flux, dt)
 
+        # Yakıt tükenmesi (burnup) reaktivite kaybı
+        # Yakıt tükendikçe k_eff düşer (U-235 azalması + fisyon ürünleri birikimi)
+        # Lineer model: her 1000 MWd/MTU için ~50-100 pcm kayıp (basit yaklaşım)
+        rho_burnup = - (self.burnup_mwdmt_val / 55000.0) * 0.05  # Max %5 kayıp
+
         # Güncelle uyumluluk değişkenleri
         self.iodine_conc = self.xenon.iodine
         self.xenon_conc  = self.xenon.xenon
 
-        total_rho = rho_rod + rho_temp + rho_xe + rho_sm
+        total_rho = rho_rod + rho_temp + rho_xe + rho_sm + rho_burnup
         return total_rho
 
     def estimate_burnup_mwdmt(self, power_mw: float, time_days: float,

@@ -10,20 +10,42 @@ def clear_screen():
 def render_dashboard(reactor):
     status = reactor.get_status()
     clear_screen()
-    print("="*60)
-    print(f"       ☢️  REACTOR CONTROL CENTER: {reactor.config.get('reactor_name')} ☢️")
-    print("="*60)
-    print(f" [STATUS]      {status['scram']}")
-    print(f" [POWER]       {status['power']}  |  [FLUX]  {status['flux']}")
-    print("-" * 60)
-    print(f" [TEMPERATURE] {status['temp']}  (Limit: {reactor.config['thresholds']['critical_temp']}K)")
-    print(f" [PRESSURE]    {status['press']}  (Limit: {reactor.config['thresholds']['max_pressure']} bar)")
-    print("-" * 60)
-    print(f" [RODS POS]    {status['rods']}  [1: Up, 0: Down]")
-    print(f" [COOLANT]     {status['coolant']}  [W: Inc, S: Dec]")
-    print("="*60)
-    print(" Commands: [R <pos>] set Rods, [C <flow>] set Coolant, [S] SCRAM, [Q] Quiet")
-    print("="*60)
+    
+    # Premium ASCII Header
+    print("\033[1;36m" + "╔" + "═" * 78 + "╗" + "\033[0m")
+    print("\033[1;36m" + "║" + f"   ☢️   SKYGUARD AMR-OS | NUCLEAR DIVISION | {reactor.config.get('reactor_name'):<20}   ☢️".center(78) + "║" + "\033[0m")
+    print("\033[1;36m" + "╠" + "═" * 38 + "╦" + "═" * 39 + "╣" + "\033[0m")
+    
+    # Status and Alarm Section
+    scram_status = "\033[1;31mSAFE-SHUTDOWN (SCRAM)\033[0m" if reactor.scram_active else "\033[1;32mSTEADY-STATE\033[0m"
+    alarm_colors = {0: "\033[1;32mNORMAL\033[0m", 1: "\033[1;33mWARNING\033[0m", 2: "\033[1;31mHIGH-ALARM\033[0m", 3: "\033[1;41mSCRAM\033[0m"}
+    alarm_str = alarm_colors.get(reactor.alarm_level, "UNKNOWN")
+    
+    print("\033[1;36m" + "║" + f" [CORE STATUS] {scram_status:<36}".center(38) + "║" + f" [ALARM LEVEL] {alarm_str:<37}".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
+    
+    # Power and Flux Section
+    print("\033[1;36m" + "║" + f" [THERMAL POWER] {status['güç']:>20} ".center(38) + "║" + f" [NEUTRON FLUX]  {status['nötron_akısı']:>20} ".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "║" + f" [BURNUP]        {status['burnup']:>20} ".center(38) + "║" + f" [ELAPSED TIME]  {status['süre_s']:>20} s".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
+    
+    # Temperature and Pressure Section
+    print("\033[1;36m" + "║" + f" [TEMPERATURE]   {status['sıcaklık']:>20} ".center(38) + "║" + f" [PRESSURE]      {status['basınç']:>20} ".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
+    
+    # Poisoning and Reactivity
+    print("\033[1;36m" + "║" + f" [Xe-135 POISON] {status['xe135_pcm']:>20} ".center(38) + "║" + f" [Sm-149 POISON] {status['sm149_pcm']:>20} ".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "╠" + "═" * 38 + "╩" + "═" * 39 + "╣" + "\033[0m")
+    
+    # Controls Section
+    rod_line = "█" * int(reactor.control_rod_pos / 4.0) + "░" * (25 - int(reactor.control_rod_pos / 4.0))
+    flow_line = "█" * int(reactor.coolant_flow / 4.0) + "░" * (25 - int(reactor.coolant_flow / 4.0))
+    
+    print("\033[1;36m║\033[0m" + f" [ROD POSITION]  [{rod_line}] {status['kontrol_çubukları']}".center(78) + "\033[1;36m║\033[0m")
+    print("\033[1;36m║\033[0m" + f" [COOLANT FLOW]  [{flow_line}] {status['soğutucu_akış']}".center(78) + "\033[1;36m║\033[0m")
+    
+    print("\033[1;36m" + "╚" + "═" * 78 + "╝" + "\033[0m")
+    print("\033[1;37m" + " Commands: [R <0-100>] Rods | [C <0-100>] Flow | [S] SCRAM | [Q] Quit".center(80) + "\033[0m")
 
 def control_thread(reactor):
     while not reactor.scram_active:
