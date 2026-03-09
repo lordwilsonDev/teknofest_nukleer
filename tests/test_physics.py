@@ -126,25 +126,29 @@ class TestReactorPhysics:
 
     def test_calculate_reactivity_returns_float(self):
         rp = ReactorPhysics()
-        result = rp.calculate_reactivity(60.0, 563.0, NOMINAL_FLUX, dt=1.0)
+        result = rp.calculate_reactivity(60.0, 563.0, 563.0, NOMINAL_FLUX, dt=1.0)
         assert isinstance(result, float)
 
     def test_rod_fully_in_gives_negative_reactivity(self):
         """Çubuklar tamamen içeri → negatif reaktivite → reaktör söner."""
         rp = ReactorPhysics()
-        rho = rp.calculate_reactivity(0.0, 563.0, NOMINAL_FLUX, dt=1.0)
+        rho = rp.calculate_reactivity(0.0, 563.0, 563.0, NOMINAL_FLUX, dt=1.0)
         assert rho < 0
 
     def test_rod_fully_out_gives_positive_reactivity(self):
         """Çubuklar tamamen dışarı → pozitif reaktivite → güç artar."""
         rp = ReactorPhysics()
-        rho = rp.calculate_reactivity(100.0, 300.0, 1e10, dt=1.0)
+        rho = rp.calculate_reactivity(100.0, 300.0, 300.0, 1e10, dt=1.0)
         assert rho > 0
 
-    def test_temp_feedback_negative(self):
-        rp = ReactorPhysics()
-        feedback = rp.calculate_temp_feedback(700.0)
-        assert feedback < 0, "Doppler + moderatör katsayısı negatif olmalı"
+    def test_temp_feedback_separated(self):
+        rp1 = ReactorPhysics()
+        rp2 = ReactorPhysics()
+        # Doppler ve moderatör katsayılarını ayrı ayrı hesaplamak yerine calculate_reactivity
+        # içindeki toplam reaktivite değişimini test edelim.
+        rho_ref = rp1.calculate_reactivity(50.0, 563.0, 563.0, NOMINAL_FLUX)
+        rho_hot = rp2.calculate_reactivity(50.0, 600.0, 580.0, NOMINAL_FLUX)
+        assert rho_hot < rho_ref, "Sıcaklık artışı (Fuel/Coolant) reaktiviteyi düşürmeli"
 
     def test_temp_feedback_at_reference_zero(self):
         rp = ReactorPhysics()
@@ -189,14 +193,14 @@ class TestThermalHydraulics:
 
     def test_coolant_temp_increases_with_power(self):
         th = ThermalHydraulics()
-        T = th.fuel_to_coolant(T_fuel=600.0, T_cool=563.0, power_mw=150.0, dt=1.0)
-        # Yüksek güç → soğutucu ısınmalı
-        assert T >= ThermalHydraulics.T_SINK
+        Tf, Tc = th.fuel_and_coolant_dynamic(T_fuel=600.0, T_cool=563.0, power_mw=150.0, dt=1.0)
+        assert Tf > 600.0
+        assert Tc > 563.0
 
     def test_coolant_temp_minimum_is_sink(self):
         th = ThermalHydraulics()
-        T = th.fuel_to_coolant(T_fuel=300.0, T_cool=300.0, power_mw=0.0, dt=1000.0)
-        assert T >= ThermalHydraulics.T_SINK
+        Tf, Tc = th.fuel_and_coolant_dynamic(T_fuel=300.0, T_cool=300.0, power_mw=0.0, dt=1000.0)
+        assert Tc >= ThermalHydraulics.T_SINK
 
 
 if __name__ == "__main__":

@@ -1,0 +1,53 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 62 items
+
+tests\test_core.py ................F..........F....                      [ 51%]
+tests\test_physics.py ..........................                         [ 93%]
+tests\test_reactor.py ....                                               [100%]
+
+================================== FAILURES ===================================
+___________________ TestPhysicsStep.test_history_populated ____________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000001A837CAE450>
+
+    def test_history_populated(self):
+        r = ReactorCore()
+        r.initialize_steady_state() # Dengeteki durum ile ba■la
+        for _ in range(5):
+            r.step(dt=1.0)
+>       assert len(r._history) == 5
+E       AssertionError: assert 2 == 5
+E        +  where 2 = len([ReactorState(timestamp=1.0, temperature_k=569.1666666666666, pressure_bar=156.75071321914425, neutron_flux=1.64854283...conc=0.0, samarium_conc=0.0, burnup_mwdmt=0.004166666666666667, reactivity_pcm=-0.0, scram_active=True, alarm_level=3)])
+E        +    where [ReactorState(timestamp=1.0, temperature_k=569.1666666666666, pressure_bar=156.75071321914425, neutron_flux=1.64854283...conc=0.0, samarium_conc=0.0, burnup_mwdmt=0.004166666666666667, reactivity_pcm=-0.0, scram_active=True, alarm_level=3)] = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=787.2K, P=360.0MWth, scram=True)._history
+
+tests\test_core.py:138: AssertionError
+---------------------------- Captured stdout call -----------------------------
+\n[\u26a0\ufe0f  ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 360.0 MWth > 300.0 MWth\n\n[\U0001f6a8 SCRAM] A\u015eIRI BASIN\xc7 \u2014 SCRAM
+------------------------------ Captured log call ------------------------------
+WARNING  ReactorCore:reactor_core.py:246 [ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 360.0 MWth > 300.0 MWth\nCRITICAL ReactorCore:reactor_core.py:246 \u2622\ufe0f  SCRAM AKT\u0130F: A\u015eIRI BASIN\xc7 \u2014 SCRAM
+___________________ TestStatusAPI.test_get_history_as_dicts ___________________
+
+self = <tests.test_core.TestStatusAPI object at 0x000001A837CF1010>
+
+    def test_get_history_as_dicts(self):
+        r = ReactorCore()
+        r.initialize_steady_state()
+        for _ in range(3):
+            r.step(dt=1.0)
+        history = r.get_history_as_dicts()
+>       assert len(history) == 3
+E       AssertionError: assert 2 == 3
+E        +  where 2 = len([{'alarm_level': 2, 'burnup_mwdmt': 0.0020833333333333333, 'control_rod_pos': 60.0, 'coolant_flow_pct': 80.0, ...}, {'alarm_level': 3, 'burnup_mwdmt': 0.004166666666666667, 'control_rod_pos': 0.0, 'coolant_flow_pct': 100.0, ...}])
+
+tests\test_core.py:224: AssertionError
+---------------------------- Captured stdout call -----------------------------
+\n[\u26a0\ufe0f  ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 360.0 MWth > 300.0 MWth\n\n[\U0001f6a8 SCRAM] A\u015eIRI BASIN\xc7 \u2014 SCRAM
+------------------------------ Captured log call ------------------------------
+WARNING  ReactorCore:reactor_core.py:246 [ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 360.0 MWth > 300.0 MWth\nCRITICAL ReactorCore:reactor_core.py:246 \u2622\ufe0f  SCRAM AKT\u0130F: A\u015eIRI BASIN\xc7 \u2014 SCRAM
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::TestPhysicsStep::test_history_populated - Assertio...
+FAILED tests/test_core.py::TestStatusAPI::test_get_history_as_dicts - Asserti...
+======================== 2 failed, 60 passed in 0.79s =========================

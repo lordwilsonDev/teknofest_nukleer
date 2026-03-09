@@ -1,0 +1,459 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 62 items
+
+tests\test_core.py ...........FFFFFFF.........F.F..                      [ 51%]
+tests\test_physics.py .............FFF........FF                         [ 93%]
+tests\test_reactor.py .F.F                                               [100%]
+
+================================== FAILURES ===================================
+__________________ TestPhysicsStep.test_step_does_not_raise ___________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B10CD0>
+
+    def test_step_does_not_raise(self):
+        r = ReactorCore()
+>       r.step(dt=1.0)  # Hata f²rlatmamal²
+        ^^^^^^^^^^^^^^
+
+tests\test_core.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1AC9910>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+____________ TestPhysicsStep.test_flux_remains_positive_after_step ____________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B111D0>
+
+    def test_flux_remains_positive_after_step(self):
+        r = ReactorCore()
+        r.update_control_rods(80)
+        for _ in range(10):
+>           r.step(dt=1.0)
+
+tests\test_core.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1A73490>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+_________ TestPhysicsStep.test_temperature_increases_with_full_power __________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B13250>
+
+    def test_temperature_increases_with_full_power(self):
+        """Tam g³te (ubuklar d²■ar²da) s²cakl²k artmal²."""
+        r = ReactorCore()
+        r.update_control_rods(100)
+        r.update_coolant_flow(0)  # So­utma kapal²
+        initial_temp = r.temperature
+        for _ in range(5):
+>           r.step(dt=1.0)
+
+tests\test_core.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1AA4690>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+________________ TestPhysicsStep.test_elapsed_time_increments _________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B101D0>
+
+    def test_elapsed_time_increments(self):
+        r = ReactorCore()
+>       r.step(dt=5.0)
+
+tests\test_core.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD19E3690>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 5.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+______________ TestPhysicsStep.test_burnup_increases_with_power _______________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B05D10>
+
+    def test_burnup_increases_with_power(self):
+        r = ReactorCore()
+        r.update_control_rods(70)
+        for _ in range(100):
+>           r.step(dt=1.0)
+
+tests\test_core.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1AB2810>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+___________________ TestPhysicsStep.test_history_populated ____________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B06790>
+
+    def test_history_populated(self):
+        r = ReactorCore()
+        for _ in range(5):
+>           r.step(dt=1.0)
+
+tests\test_core.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD19CFC50>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+_________________ TestPhysicsStep.test_scram_stops_new_steps __________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000002DDD1B05DD0>
+
+    def test_scram_stops_new_steps(self):
+        """SCRAM aktifken ad²m sadece at²m ²s²s² s÷n³mlemesi yapmal²."""
+        r = ReactorCore()
+        r.emergency_shutdown("test")
+        pre_flux = r.neutron_flux
+>       r.step(dt=1.0)
+
+tests\test_core.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:309: in step
+    self._scram_decay_heat(dt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=True)
+dt = 1.0
+
+    def _scram_decay_heat(self, dt: float):
+        """SCRAM sonras² at²m ²s²s² ù ANS-5.1 azalma e­risi (basitle■tirilmi■)."""
+        decay_fraction = 0.065 * (self._elapsed_s + 1.0) ** (-0.2)
+        decay_power    = float(self.config.get("design_power_mwth", 150.0)) * decay_fraction
+        # Pasif so­utma
+        passive_cap    = 15.0  # MW ù pasif so­utma kapasitesi
+        net_heat       = max(0.0, decay_power - passive_cap)
+        self.fuel_temp += net_heat * dt * 0.01
+>       self.cool_temp += (self.fuel_temp - self.coolant_temp) * 0.01 * dt # Basit transfer
+        ^^^^^^^^^^^^^^
+E       AttributeError: 'ReactorCore' object has no attribute 'cool_temp'
+
+src\reactor_core.py:372: AttributeError
+---------------------------- Captured stdout call -----------------------------
+\n[\U0001f6a8 SCRAM] test
+------------------------------ Captured log call ------------------------------
+CRITICAL ReactorCore:reactor_core.py:246 \u2622\ufe0f  SCRAM AKT\u0130F: test
+___________________ TestStatusAPI.test_get_history_as_dicts ___________________
+
+self = <tests.test_core.TestStatusAPI object at 0x000002DDD1B04950>
+
+    def test_get_history_as_dicts(self):
+        r = ReactorCore()
+        for _ in range(3):
+>           r.step(dt=1.0)
+
+tests\test_core.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1AB2150>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+_____________________ TestStatusAPI.test_context_manager ______________________
+
+self = <tests.test_core.TestStatusAPI object at 0x000002DDD1AF5D90>
+
+    def test_context_manager(self):
+        with ReactorCore() as r:
+>           r.step(dt=1.0)
+
+tests\test_core.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1B47B50>, T_fuel = 563.0
+T_cool = 563.0, power_mw = 192.0, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+_________ TestReactorPhysics.test_calculate_reactivity_returns_float __________
+
+self = <tests.test_physics.TestReactorPhysics object at 0x000002DDD1AE8C10>
+
+    def test_calculate_reactivity_returns_float(self):
+        rp = ReactorPhysics()
+>       result = rp.calculate_reactivity(60.0, 563.0, NOMINAL_FLUX, dt=1.0)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:129: TypeError
+_______ TestReactorPhysics.test_rod_fully_in_gives_negative_reactivity ________
+
+self = <tests.test_physics.TestReactorPhysics object at 0x000002DDD1AE8A50>
+
+    def test_rod_fully_in_gives_negative_reactivity(self):
+        """\xc7ubuklar tamamen i\xe7eri \u2192 negatif reaktivite \u2192 reakt\xf6r s\xf6ner."""
+        rp = ReactorPhysics()
+>       rho = rp.calculate_reactivity(0.0, 563.0, NOMINAL_FLUX, dt=1.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:135: TypeError
+_______ TestReactorPhysics.test_rod_fully_out_gives_positive_reactivity _______
+
+self = <tests.test_physics.TestReactorPhysics object at 0x000002DDD1AE9290>
+
+    def test_rod_fully_out_gives_positive_reactivity(self):
+        """\xc7ubuklar tamamen d\u0131\u015far\u0131 \u2192 pozitif reaktivite \u2192 g\xfc\xe7 artar."""
+        rp = ReactorPhysics()
+>       rho = rp.calculate_reactivity(100.0, 300.0, 1e10, dt=1.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:141: TypeError
+________ TestThermalHydraulics.test_coolant_temp_increases_with_power _________
+
+self = <tests.test_physics.TestThermalHydraulics object at 0x000002DDD1A1D010>
+
+    def test_coolant_temp_increases_with_power(self):
+        th = ThermalHydraulics()
+>       T = th.fuel_to_coolant(T_fuel=600.0, T_cool=563.0, power_mw=150.0, dt=1.0)
+            ^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'fuel_to_coolant'
+
+tests\test_physics.py:192: AttributeError
+___________ TestThermalHydraulics.test_coolant_temp_minimum_is_sink ___________
+
+self = <tests.test_physics.TestThermalHydraulics object at 0x000002DDD1A1D510>
+
+    def test_coolant_temp_minimum_is_sink(self):
+        th = ThermalHydraulics()
+>       T = th.fuel_to_coolant(T_fuel=300.0, T_cool=300.0, power_mw=0.0, dt=1000.0)
+            ^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'fuel_to_coolant'
+
+tests\test_physics.py:198: AttributeError
+_________________ TestEnhancedReactor.test_physics_step_flux __________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_physics_step_flux>
+
+    def test_physics_step_flux(self):
+        initial_flux = self.reactor.neutron_flux
+        self.reactor.update_control_rods(100) # Full exposure
+>       self.reactor.step()
+
+tests\test_reactor.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:343: in step
+    self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <physics.ThermalHydraulics object at 0x000002DDD1CC0990>, T_fuel = 300.0
+T_cool = 300.0, power_mw = 0.18837338172289414, dt = 1.0
+
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+        """
+        2-D³­³ml³ (Fuel & Coolant) Is² Transferi Modeli.
+        - Yak²t (Node 1): Fisyon enerjisi ³retir, so­utucuya ²s² verir.
+        - So­utucu (Node 2): Yak²ttan ²s² al²r, evreye/²s² havuzuna ²s² verir.
+        """
+        Q_gen = power_mw * 1.0e6               # W (Fisyon g³c³)
+    
+        # 1. Yak²ttan So­utucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsay²lan 3.5e6 W/K
+>       Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+                       ^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'HA_CORE'
+
+src\physics.py:162: AttributeError
+__________________ TestEnhancedReactor.test_scram_mechanics ___________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_scram_mechanics>
+
+    def test_scram_mechanics(self):
+        self.reactor.emergency_shutdown("TEST SCRAM")
+        self.assertTrue(self.reactor.scram_active)
+>       self.reactor.step()
+
+tests\test_reactor.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:309: in step
+    self._scram_decay_heat(dt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEST-UNIT-01', T=300.0K, P=0.0MWth, scram=True)
+dt = 1.0
+
+    def _scram_decay_heat(self, dt: float):
+        """SCRAM sonras² at²m ²s²s² ù ANS-5.1 azalma e­risi (basitle■tirilmi■)."""
+        decay_fraction = 0.065 * (self._elapsed_s + 1.0) ** (-0.2)
+        decay_power    = float(self.config.get("design_power_mwth", 150.0)) * decay_fraction
+        # Pasif so­utma
+        passive_cap    = 15.0  # MW ù pasif so­utma kapasitesi
+        net_heat       = max(0.0, decay_power - passive_cap)
+        self.fuel_temp += net_heat * dt * 0.01
+>       self.cool_temp += (self.fuel_temp - self.coolant_temp) * 0.01 * dt # Basit transfer
+        ^^^^^^^^^^^^^^
+E       AttributeError: 'ReactorCore' object has no attribute 'cool_temp'
+
+src\reactor_core.py:372: AttributeError
+---------------------------- Captured stdout call -----------------------------
+\n[\U0001f6a8 SCRAM] TEST SCRAM
+------------------------------ Captured log call ------------------------------
+CRITICAL ReactorCore:reactor_core.py:246 \u2622\ufe0f  SCRAM AKT\u0130F: TEST SCRAM
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::TestPhysicsStep::test_step_does_not_raise - Attrib...
+FAILED tests/test_core.py::TestPhysicsStep::test_flux_remains_positive_after_step
+FAILED tests/test_core.py::TestPhysicsStep::test_temperature_increases_with_full_power
+FAILED tests/test_core.py::TestPhysicsStep::test_elapsed_time_increments - At...
+FAILED tests/test_core.py::TestPhysicsStep::test_burnup_increases_with_power
+FAILED tests/test_core.py::TestPhysicsStep::test_history_populated - Attribut...
+FAILED tests/test_core.py::TestPhysicsStep::test_scram_stops_new_steps - Attr...
+FAILED tests/test_core.py::TestStatusAPI::test_get_history_as_dicts - Attribu...
+FAILED tests/test_core.py::TestStatusAPI::test_context_manager - AttributeErr...
+FAILED tests/test_physics.py::TestReactorPhysics::test_calculate_reactivity_returns_float
+FAILED tests/test_physics.py::TestReactorPhysics::test_rod_fully_in_gives_negative_reactivity
+FAILED tests/test_physics.py::TestReactorPhysics::test_rod_fully_out_gives_positive_reactivity
+FAILED tests/test_physics.py::TestThermalHydraulics::test_coolant_temp_increases_with_power
+FAILED tests/test_physics.py::TestThermalHydraulics::test_coolant_temp_minimum_is_sink
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_physics_step_flux - A...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_scram_mechanics - Att...
+======================== 16 failed, 46 passed in 1.18s ========================

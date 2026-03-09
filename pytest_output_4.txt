@@ -1,0 +1,2777 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 62 items
+
+tests\test_core.py FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                      [ 51%]
+tests\test_physics.py .............FFF........FF                         [ 93%]
+tests\test_reactor.py FFFF                                               [100%]
+
+================================== FAILURES ===================================
+_________________ TestInitialization.test_default_temperature _________________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786A7D50>
+
+    def test_default_temperature(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestInitialization.test_default_pressure ___________________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786D4790>
+
+    def test_default_pressure(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+______________ TestInitialization.test_scram_not_active_at_start ______________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786D4ED0>
+
+    def test_scram_not_active_at_start(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_____________ TestInitialization.test_alarm_level_normal_at_start _____________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786D5550>
+
+    def test_alarm_level_normal_at_start(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestInitialization.test_neutron_flux_positive ________________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786D5B90>
+
+    def test_neutron_flux_positive(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestInitialization.test_burnup_zero_at_start _________________
+
+self = <tests.test_core.TestInitialization object at 0x00000224786D4410>
+
+    def test_burnup_zero_at_start(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestControlRods.test_rod_position_normal ___________________
+
+self = <tests.test_core.TestControlRods object at 0x00000224786D6110>
+
+    def test_rod_position_normal(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestControlRods.test_rod_position_clamp_upper ________________
+
+self = <tests.test_core.TestControlRods object at 0x00000224786D65D0>
+
+    def test_rod_position_clamp_upper(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestControlRods.test_rod_position_clamp_lower ________________
+
+self = <tests.test_core.TestControlRods object at 0x00000224786D6C10>
+
+    def test_rod_position_clamp_lower(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_____________ TestControlRods.test_rod_move_blocked_during_scram ______________
+
+self = <tests.test_core.TestControlRods object at 0x00000224786D7290>
+
+    def test_rod_move_blocked_during_scram(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestControlRods.test_rod_to_zero_on_scram __________________
+
+self = <tests.test_core.TestControlRods object at 0x00000224786D78D0>
+
+    def test_rod_to_zero_on_scram(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestPhysicsStep.test_step_does_not_raise ___________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B0150>
+
+    def test_step_does_not_raise(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+____________ TestPhysicsStep.test_flux_remains_positive_after_step ____________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B07D0>
+
+    def test_flux_remains_positive_after_step(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_________ TestPhysicsStep.test_temperature_increases_with_full_power __________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B0E10>
+
+    def test_temperature_increases_with_full_power(self):
+        """Tam g³te (ubuklar d²■ar²da) s²cakl²k artmal²."""
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestPhysicsStep.test_elapsed_time_increments _________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B1490>
+
+    def test_elapsed_time_increments(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+______________ TestPhysicsStep.test_burnup_increases_with_power _______________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B1AD0>
+
+    def test_burnup_increases_with_power(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________________ TestPhysicsStep.test_history_populated ____________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B2110>
+
+    def test_history_populated(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_________________ TestPhysicsStep.test_scram_stops_new_steps __________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x00000224786B2750>
+
+    def test_scram_stops_new_steps(self):
+        """SCRAM aktifken ad²m sadece at²m ²s²s² s÷n³mlemesi yapmal²."""
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________ TestSafety.test_scram_on_critical_temperature ________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786B2FD0>
+
+    def test_scram_on_critical_temperature(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________________ TestSafety.test_scram_on_high_pressure ____________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786B3610>
+
+    def test_scram_on_high_pressure(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestSafety.test_alarm_on_high_temperature __________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786B3C50>
+
+    def test_alarm_on_high_temperature(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+________________________ TestSafety.test_manual_scram _________________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786F8310>
+
+    def test_manual_scram(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+____________________ TestSafety.test_coolant_max_on_scram _____________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786B3450>
+
+    def test_coolant_max_on_scram(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:178: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+______________ TestSafety.test_reset_scram_temperature_too_high _______________
+
+self = <tests.test_core.TestSafety object at 0x00000224786B1850>
+
+    def test_reset_scram_temperature_too_high(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:184: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestSafety.test_reset_scram_unauthorized ___________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786D7410>
+
+    def test_reset_scram_unauthorized(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:191: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________________ TestSafety.test_borate_reduces_rod_pos ____________________
+
+self = <tests.test_core.TestSafety object at 0x00000224786F8390>
+
+    def test_borate_reduces_rod_pos(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_____________________ TestStatusAPI.test_get_status_keys ______________________
+
+self = <tests.test_core.TestStatusAPI object at 0x00000224786F88D0>
+
+    def test_get_status_keys(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________________ TestStatusAPI.test_get_history_as_dicts ___________________
+
+self = <tests.test_core.TestStatusAPI object at 0x00000224786F8C90>
+
+    def test_get_history_as_dicts(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:216: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+____________________ TestStatusAPI.test_repr_contains_name ____________________
+
+self = <tests.test_core.TestStatusAPI object at 0x00000224786F92D0>
+
+    def test_repr_contains_name(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_____________________ TestStatusAPI.test_context_manager ______________________
+
+self = <tests.test_core.TestStatusAPI object at 0x00000224786F9950>
+
+    def test_context_manager(self):
+>       with ReactorCore() as r:
+             ^^^^^^^^^^^^^
+
+tests\test_core.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________ TestSteadyState.test_initialize_steady_state_sets_xenon ___________
+
+self = <tests.test_core.TestSteadyState object at 0x00000224786FA150>
+
+    def test_initialize_steady_state_sets_xenon(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:238: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+____________ TestSteadyState.test_power_output_after_steady_state _____________
+
+self = <tests.test_core.TestSteadyState object at 0x00000224786FA790>
+
+    def test_power_output_after_steady_state(self):
+>       r = ReactorCore()
+            ^^^^^^^^^^^^^
+
+tests\test_core.py:243: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=563.0K, P=0.0MWth, scram=False)
+config_path = 'config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_________ TestReactorPhysics.test_calculate_reactivity_returns_float __________
+
+self = <tests.test_physics.TestReactorPhysics object at 0x0000022478710050>
+
+    def test_calculate_reactivity_returns_float(self):
+        rp = ReactorPhysics()
+>       result = rp.calculate_reactivity(60.0, 563.0, NOMINAL_FLUX, dt=1.0)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:129: TypeError
+_______ TestReactorPhysics.test_rod_fully_in_gives_negative_reactivity ________
+
+self = <tests.test_physics.TestReactorPhysics object at 0x0000022478710690>
+
+    def test_rod_fully_in_gives_negative_reactivity(self):
+        """\xc7ubuklar tamamen i\xe7eri \u2192 negatif reaktivite \u2192 reakt\xf6r s\xf6ner."""
+        rp = ReactorPhysics()
+>       rho = rp.calculate_reactivity(0.0, 563.0, NOMINAL_FLUX, dt=1.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:135: TypeError
+_______ TestReactorPhysics.test_rod_fully_out_gives_positive_reactivity _______
+
+self = <tests.test_physics.TestReactorPhysics object at 0x0000022478710CD0>
+
+    def test_rod_fully_out_gives_positive_reactivity(self):
+        """\xc7ubuklar tamamen d\u0131\u015far\u0131 \u2192 pozitif reaktivite \u2192 g\xfc\xe7 artar."""
+        rp = ReactorPhysics()
+>       rho = rp.calculate_reactivity(100.0, 300.0, 1e10, dt=1.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ReactorPhysics.calculate_reactivity() missing 1 required positional argument: 'flux'
+
+tests\test_physics.py:141: TypeError
+________ TestThermalHydraulics.test_coolant_temp_increases_with_power _________
+
+self = <tests.test_physics.TestThermalHydraulics object at 0x0000022478712C90>
+
+    def test_coolant_temp_increases_with_power(self):
+        th = ThermalHydraulics()
+>       T = th.fuel_to_coolant(T_fuel=600.0, T_cool=563.0, power_mw=150.0, dt=1.0)
+            ^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'fuel_to_coolant'
+
+tests\test_physics.py:192: AttributeError
+___________ TestThermalHydraulics.test_coolant_temp_minimum_is_sink ___________
+
+self = <tests.test_physics.TestThermalHydraulics object at 0x00000224787120D0>
+
+    def test_coolant_temp_minimum_is_sink(self):
+        th = ThermalHydraulics()
+>       T = th.fuel_to_coolant(T_fuel=300.0, T_cool=300.0, power_mw=0.0, dt=1000.0)
+            ^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ThermalHydraulics' object has no attribute 'fuel_to_coolant'
+
+tests\test_physics.py:198: AttributeError
+__________________ TestEnhancedReactor.test_logging_creation __________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_logging_creation>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEST-UNIT-01', T=300.0K, P=0.0MWth, scram=False)
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+_________________ TestEnhancedReactor.test_physics_step_flux __________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_physics_step_flux>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEST-UNIT-01', T=300.0K, P=0.0MWth, scram=False)
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+___________________ TestEnhancedReactor.test_rod_adjustment ___________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_rod_adjustment>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEST-UNIT-01', T=300.0K, P=0.0MWth, scram=False)
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+__________________ TestEnhancedReactor.test_scram_mechanics ___________________
+
+self = <tests.test_reactor.TestEnhancedReactor testMethod=test_scram_mechanics>
+
+    def setUp(self):
+>       self.reactor = ReactorCore(config_path=self.test_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reactor.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReactorCore(name='TEST-UNIT-01', T=300.0K, P=0.0MWth, scram=False)
+config_path = 'test_config.json'
+
+    def __init__(self, config_path: str = "config.json"):
+        self._start_time = datetime.now()
+        self._elapsed_s  = 0.0
+        self._step_count = 0
+        self._events: list[ReactorEvent] = []
+        self._history: list[ReactorState] = []
+        self._history_max = 86400   # 24 saatlik veri saklama (saniye ba■²na)
+    
+        self.config = self._load_config(config_path)
+        cfg_state   = self.config["initial_state"]
+        cfg_thresh  = self.config["thresholds"]
+        cfg_sim     = self.config.get("simulation", {})
+        cfg_fuel    = self.config.get("fuel", {})
+    
+        # Durum de­i■kenleri (2-D³­³ml³ TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye d÷n³k uyumluluk
+        self.pressure         = float(cfg_state["pressure"])
+        self.neutron_flux     = float(cfg_state["neutron_flux"])
+        self.control_rod_pos  = float(cfg_state["control_rod_pos"])
+        self.coolant_flow     = float(cfg_state.get("coolant_flow", 80.0))
+        self.burnup_mwdmt     = float(cfg_state.get("burnup_mwdmt", 0.0))
+        self.power_mwth       = 0.0
+        self.scram_active     = False
+        self.alarm_level      = AlarmLevel.NORMAL
+        self.scram_reason     = ""
+    
+        # E■ik de­erleri
+        self.max_temp         = float(cfg_thresh["max_temp"])
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.critical_temp    = float(cfg_thresh["critical_temp"])
+        self.max_pressure     = float(cfg_thresh["max_pressure"])
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+    
+        # Yak²t parametreleri
+        self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
+        self._max_burnup      = float(cfg_fuel.get("max_burnup_mwdmt", 55000.0))
+    
+        # G³r³lt³ parametreleri
+        self._noise_flux      = float(cfg_sim.get("noise_flux_amplitude", 1.0e9))
+        self._noise_temp      = float(cfg_sim.get("noise_temp_amplitude", 0.05))
+    
+        # Fizik motoru
+        self.physics = ReactorPhysics()
+    
+        # Telemetri
+        self.telemetry = Telemetry(max_points=self._history_max)
+    
+        # Do­rulama
+        self._validate_config()
+    
+        # Otomasyon (PID) ù G³ kontrol³ iin
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+>       self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+                                                                   ^^^^^^^^^^^
+E       NameError: name 'design_mwth' is not defined
+
+src\reactor_core.py:202: NameError
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::TestInitialization::test_default_temperature - Nam...
+FAILED tests/test_core.py::TestInitialization::test_default_pressure - NameEr...
+FAILED tests/test_core.py::TestInitialization::test_scram_not_active_at_start
+FAILED tests/test_core.py::TestInitialization::test_alarm_level_normal_at_start
+FAILED tests/test_core.py::TestInitialization::test_neutron_flux_positive - N...
+FAILED tests/test_core.py::TestInitialization::test_burnup_zero_at_start - Na...
+FAILED tests/test_core.py::TestControlRods::test_rod_position_normal - NameEr...
+FAILED tests/test_core.py::TestControlRods::test_rod_position_clamp_upper - N...
+FAILED tests/test_core.py::TestControlRods::test_rod_position_clamp_lower - N...
+FAILED tests/test_core.py::TestControlRods::test_rod_move_blocked_during_scram
+FAILED tests/test_core.py::TestControlRods::test_rod_to_zero_on_scram - NameE...
+FAILED tests/test_core.py::TestPhysicsStep::test_step_does_not_raise - NameEr...
+FAILED tests/test_core.py::TestPhysicsStep::test_flux_remains_positive_after_step
+FAILED tests/test_core.py::TestPhysicsStep::test_temperature_increases_with_full_power
+FAILED tests/test_core.py::TestPhysicsStep::test_elapsed_time_increments - Na...
+FAILED tests/test_core.py::TestPhysicsStep::test_burnup_increases_with_power
+FAILED tests/test_core.py::TestPhysicsStep::test_history_populated - NameErro...
+FAILED tests/test_core.py::TestPhysicsStep::test_scram_stops_new_steps - Name...
+FAILED tests/test_core.py::TestSafety::test_scram_on_critical_temperature - N...
+FAILED tests/test_core.py::TestSafety::test_scram_on_high_pressure - NameErro...
+FAILED tests/test_core.py::TestSafety::test_alarm_on_high_temperature - NameE...
+FAILED tests/test_core.py::TestSafety::test_manual_scram - NameError: name 'd...
+FAILED tests/test_core.py::TestSafety::test_coolant_max_on_scram - NameError:...
+FAILED tests/test_core.py::TestSafety::test_reset_scram_temperature_too_high
+FAILED tests/test_core.py::TestSafety::test_reset_scram_unauthorized - NameEr...
+FAILED tests/test_core.py::TestSafety::test_borate_reduces_rod_pos - NameErro...
+FAILED tests/test_core.py::TestStatusAPI::test_get_status_keys - NameError: n...
+FAILED tests/test_core.py::TestStatusAPI::test_get_history_as_dicts - NameErr...
+FAILED tests/test_core.py::TestStatusAPI::test_repr_contains_name - NameError...
+FAILED tests/test_core.py::TestStatusAPI::test_context_manager - NameError: n...
+FAILED tests/test_core.py::TestSteadyState::test_initialize_steady_state_sets_xenon
+FAILED tests/test_core.py::TestSteadyState::test_power_output_after_steady_state
+FAILED tests/test_physics.py::TestReactorPhysics::test_calculate_reactivity_returns_float
+FAILED tests/test_physics.py::TestReactorPhysics::test_rod_fully_in_gives_negative_reactivity
+FAILED tests/test_physics.py::TestReactorPhysics::test_rod_fully_out_gives_positive_reactivity
+FAILED tests/test_physics.py::TestThermalHydraulics::test_coolant_temp_increases_with_power
+FAILED tests/test_physics.py::TestThermalHydraulics::test_coolant_temp_minimum_is_sink
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_logging_creation - Na...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_physics_step_flux - N...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_rod_adjustment - Name...
+FAILED tests/test_reactor.py::TestEnhancedReactor::test_scram_mechanics - Nam...
+======================== 41 failed, 21 passed in 1.40s ========================

@@ -1,0 +1,33 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collected 62 items
+
+tests\test_core.py ................F...............                      [ 51%]
+tests\test_physics.py ..........................                         [ 93%]
+tests\test_reactor.py ....                                               [100%]
+
+================================== FAILURES ===================================
+___________________ TestPhysicsStep.test_history_populated ____________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x000001C6C7F8E350>
+
+    def test_history_populated(self):
+        r = ReactorCore()
+        r.initialize_steady_state() # Dengeteki durum ile ba■la
+        for _ in range(5):
+            r.step(dt=1.0)
+>       assert len(r._history) == 5
+E       AssertionError: assert 4 == 5
+E        +  where 4 = len([ReactorState(timestamp=1.0, temperature_k=569.1666666666666, pressure_bar=156.73647261476034, neutron_flux=1.64854277...onc=0.0, samarium_conc=0.0, burnup_mwdmt=0.0033333423223357713, reactivity_pcm=-0.0, scram_active=True, alarm_level=3)])
+E        +    where [ReactorState(timestamp=1.0, temperature_k=569.1666666666666, pressure_bar=156.73647261476034, neutron_flux=1.64854277...onc=0.0, samarium_conc=0.0, burnup_mwdmt=0.0033333423223357713, reactivity_pcm=-0.0, scram_active=True, alarm_level=3)] = ReactorCore(name='TEKNOFEST-NUKLEER-TX1', T=727.3K, P=192.0MWth, scram=True)._history
+
+tests\test_core.py:138: AssertionError
+---------------------------- Captured stdout call -----------------------------
+\n[\u26a0\ufe0f  ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 192.0 MWth > 160.0 MWth\n\n[\U0001f6a8 SCRAM] KR\u0130T\u0130K SICAKLIK A\u015eILDI
+------------------------------ Captured log call ------------------------------
+WARNING  ReactorCore:reactor_core.py:246 [ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 192.0 MWth > 160.0 MWth\nCRITICAL ReactorCore:reactor_core.py:246 \u2622\ufe0f  SCRAM AKT\u0130F: KR\u0130T\u0130K SICAKLIK A\u015eILDI
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::TestPhysicsStep::test_history_populated - Assertio...
+======================== 1 failed, 61 passed in 6.22s =========================

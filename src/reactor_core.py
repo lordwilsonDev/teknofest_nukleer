@@ -21,6 +21,10 @@ from datetime import datetime
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 
+# Otomasyon ve Veritabanı
+from automation import PIDController
+from database import ReactorDatabase
+
 # Göreli içe aktarma yerine doğrudan modül
 try:
     from physics import ReactorPhysics
@@ -42,6 +46,7 @@ class ReactorState:
     power_mwth:       float = 0.0
     control_rod_pos:  float = 60.0
     coolant_flow_pct: float = 80.0
+    fuel_temp_k:      float = 563.0
     xenon_conc:       float = 0.0
     samarium_conc:    float = 0.0
     burnup_mwdmt:     float = 0.0
@@ -113,18 +118,18 @@ class ReactorCore:
             "temperature":     563.0,
             "pressure":        155.0,
             "neutron_flux":    3.0e13,
-            "control_rod_pos": 60,
+            "control_rod_pos": 50,
             "coolant_flow":    80.0,
             "burnup_mwdmt":    0.0
         },
         "thresholds": {
-            "max_temp":        610.0,
-            "scram_temp":      623.0,
-            "critical_temp":   673.0,
+            "max_temp":        750.0,
+            "scram_temp":      800.0,
+            "critical_temp":   900.0,
             "max_pressure":    175.0,
             "scram_pressure":  180.0,
             "min_coolant_flow": 10.0,
-            "max_power_mw":    160.0
+            "max_power_mw":    300.0
         },
         "fuel": {
             "initial_heavy_metal_kg": 2000.0,
@@ -153,8 +158,10 @@ class ReactorCore:
         cfg_sim     = self.config.get("simulation", {})
         cfg_fuel    = self.config.get("fuel", {})
 
-        # Durum değişkenleri
-        self.temperature      = float(cfg_state["temperature"])
+        # Durum değişkenleri (2-Düğümlü TH)
+        self.coolant_temp     = float(cfg_state["temperature"])
+        self.fuel_temp        = float(cfg_state["temperature"])
+        self.temperature      = self.coolant_temp # Geriye dönük uyumluluk
         self.pressure         = float(cfg_state["pressure"])
         self.neutron_flux     = float(cfg_state["neutron_flux"])
         self.control_rod_pos  = float(cfg_state["control_rod_pos"])
@@ -167,11 +174,11 @@ class ReactorCore:
 
         # Eşik değerleri
         self.max_temp         = float(cfg_thresh["max_temp"])
-        self.scram_temp       = float(cfg_thresh.get("scram_temp", cfg_thresh["critical_temp"]))
+        self.scram_temp       = float(cfg_thresh.get("scram_temp", 800.0))
         self.critical_temp    = float(cfg_thresh["critical_temp"])
         self.max_pressure     = float(cfg_thresh["max_pressure"])
-        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", cfg_thresh["max_pressure"] * 1.1))
-        self.max_power        = float(cfg_thresh.get("max_power_mw", 160.0))
+        self.scram_pressure   = float(cfg_thresh.get("scram_pressure", self.max_pressure * 1.1))
+        self.max_power        = float(cfg_thresh.get("max_power_mw", 300.0))
 
         # Yakıt parametreleri
         self._fuel_mass_kg    = float(cfg_fuel.get("initial_heavy_metal_kg", 2000.0))
@@ -189,6 +196,15 @@ class ReactorCore:
 
         # Doğrulama
         self._validate_config()
+
+        # Otomasyon (PID) — Güç kontrolü için
+        # Parametreler: Kp, Ki, Kd, Setpoint (MWth)
+        design_mwth = float(self.config.get("design_power_mwth", 150.0))
+        self.pid = PIDController(Kp=0.5, Ki=0.1, Kd=0.05, setpoint=design_mwth)
+        self.auto_pilot = False
+
+        # Veritabanı
+        self.db = ReactorDatabase()
 
         # Logger
         self._setup_logger()
@@ -245,12 +261,47 @@ class ReactorCore:
     def initialize_steady_state(self):
         """
         Reaktörü tam güçte ve kimyasal/nötronik dengedeki başlangıç durumuna koyar.
-        Xe-135/Sm-149 denge konsantrasyonlarını hesaplar.
+        Xe-135/Sm-149 ve Termal-Hidrolik (Fuel-Coolant deltaT) dengelerini hesaplar.
+        Kontrol çubuklarını kritik konuma ayarlar (ρ_tot ≈ 0).
         """
         self.physics.initialize_steady_state(self.neutron_flux)
         design_mwth = float(self.config.get("design_power_mwth", 150.0))
         self.power_mwth = design_mwth
-        self._log(logging.INFO, "Steady-state başlangıç koşulları uygulandı.")
+
+        # Termal denge: Q = HA * (Tf - Tc) => Tf = Tc + Q/HA
+        q_watts = self.power_mwth * 1.0e6
+        ha = self.physics.thermo.HA_CORE
+        self.fuel_temp = self.coolant_temp + (q_watts / ha)
+
+        # Kontrol çubuğu kritik konumu bul (binary search, ρ_tot = 0)
+        # Önce Xe+Sm+burnup+temp poisons'larını hesapla 
+        rho_xe_eq = self.physics.xenon.step(self.neutron_flux, 1e-9)
+        rho_sm_eq = self.physics.samarium.step(self.neutron_flux, 1e-9)
+        rho_temp = (self.physics.ALPHA_DOPPLER * (self.fuel_temp - 563.0)
+                    + self.physics.ALPHA_MODERATOR * (self.coolant_temp - 563.0))
+        rho_burnup = -(self.burnup_mwdmt / 55000.0) * 0.05
+        rho_poison = rho_xe_eq + rho_sm_eq + rho_temp + rho_burnup
+
+        # Çözüm: rho_rod = -rho_poison  =>  rod_worth * (rod_factor - 0.5) = -rho_poison
+        import math
+        rod_worth_total = 0.12
+        target_rod_factor = 0.5 + (-rho_poison / rod_worth_total)
+        # Kısıt: rod_factor = sin(pi*f)*0.4 + f*0.6, f=rod_pos/100 in [0,1]
+        # Newton-Raphson ile kritik rod_pos bul
+        f = 0.5  # başlangıç tahmini
+        for _ in range(30):
+            ff = math.sin(math.pi * f) * 0.4 + f * 0.6
+            dfdf = math.pi * math.cos(math.pi * f) * 0.4 + 0.6
+            delta = (ff - target_rod_factor) / max(1e-10, dfdf)
+            f -= delta
+            f = max(0.0, min(1.0, f))
+            if abs(delta) < 1e-8:
+                break
+        self.control_rod_pos = f * 100.0
+
+        self._log(logging.INFO,
+                  f"Steady-state başlatıldı. Krit. çubuk: {self.control_rod_pos:.1f}% "
+                  f"Tf={self.fuel_temp:.1f}K Tc={self.coolant_temp:.1f}K")
 
     # ─── Kontrol Arayüzleri ───────────────────────────────────────────────
 
@@ -299,7 +350,8 @@ class ReactorCore:
         # 1. Reaktivite
         rho = self.physics.calculate_reactivity(
             self.control_rod_pos,
-            self.temperature,
+            self.fuel_temp,
+            self.coolant_temp,
             self.neutron_flux,
             dt,
             burnup=self.burnup_mwdmt
@@ -311,27 +363,26 @@ class ReactorCore:
         self.neutron_flux = max(1.0e6, new_flux + noise)
 
         # 3. Termal güç (akı → güç dönüşümü)
-        # 150 MWth reaktör için 3×10¹³ n/cm²·s tipik akı → ölçeklendirme
         design_flux    = 3.0e13
         design_mwth    = float(self.config.get("design_power_mwth", 150.0))
         self.power_mwth = (self.neutron_flux / design_flux) * design_mwth
         self.power_mwth = max(0.0, min(self.power_mwth, self.max_power * 1.2))
 
-        # 4. Sıcaklık — enerji dengesi
-        # Nominal: 150 MWth güç, 80% akış → T = 563 K kararlı
-        # heat_gen ΔT → güç / referans_güç ile normalize
-        nominal_mw   = float(self.config.get("design_power_mwth", 150.0))
-        heat_gen     = (self.power_mwth / nominal_mw) * 3.0   # Max +3 K/s etkisi
-        cooling_eff  = (self.coolant_flow / 100.0)
-        cool_cap     = cooling_eff * 3.5 * (self.temperature / 563.0) ** 1.5
-        delta_T      = (heat_gen - cool_cap) * dt
-        noise_T      = random.gauss(0, self._noise_temp)
-        self.temperature = max(280.0, self.temperature + delta_T + noise_T)
+        # 4. PID Otomasyon (Auto-Pilot aktifse)
+        if self.auto_pilot and not self.scram_active:
+            adjustment = self.pid.compute(self.power_mwth, dt)
+            # Çıktı rod pozisyonuna eklenir (0-100 arasına çekilir)
+            self.control_rod_pos = max(0.0, min(100.0, self.control_rod_pos + adjustment))
 
+        # 5. Sıcaklık — 2-Düğümlü Isı Dengesi
+        self.fuel_temp, self.coolant_temp = self.physics.thermo.fuel_and_coolant_dynamic(
+            self.fuel_temp, self.coolant_temp, self.power_mwth, dt
+        )
+        self.temperature = self.coolant_temp # Uyumluluk
 
-        # 5. Basınç — ideal gaz yaklaşımı (P ∝ T)
-        T_ref          = self.config["initial_state"]["pressure"]  # 155 bar ref
-        self.pressure  = (self.temperature / self.config["initial_state"]["temperature"]) \
+        # 6. Basınç — ideal gaz yaklaşımı (P ∝ T_cool)
+        T_ref          = self.config["initial_state"]["pressure"]
+        self.pressure  = (self.coolant_temp / self.config["initial_state"]["temperature"]) \
                          * T_ref + random.gauss(0, 0.05)
 
         # 6. Burnup güncelleme (gün bazlı)
@@ -352,7 +403,9 @@ class ReactorCore:
         # Pasif soğutma
         passive_cap    = 15.0  # MW — pasif soğutma kapasitesi
         net_heat       = max(0.0, decay_power - passive_cap)
-        self.temperature += net_heat * dt * 0.01
+        self.fuel_temp += net_heat * dt * 0.01
+        self.coolant_temp += (self.fuel_temp - self.coolant_temp) * 0.01 * dt # Basit transfer
+        self.temperature = self.coolant_temp
         self._elapsed_s  += dt
 
     # ─── Güvenlik Sistemi ─────────────────────────────────────────────────
@@ -406,7 +459,10 @@ class ReactorCore:
             self.alarm_level = level
             log_level = logging.WARNING if level <= AlarmLevel.HIGH else logging.CRITICAL
             self._log(log_level, f"[ALARM L{level}] {msg}")
-            print(f"\n[⚠️  ALARM L{level}] {msg}")
+            try:
+                print(f"\n[⚠️  ALARM L{level}] {msg}")
+            except UnicodeEncodeError:
+                print(f"\n[! ALARM L{level}] {msg}")
 
     def emergency_shutdown(self, reason: str = "MANUAL SCRAM"):
         """SCRAM — çubukları tam içeri it, soğutucuyu maksimuma çek."""
@@ -417,7 +473,10 @@ class ReactorCore:
             self.control_rod_pos = 0.0
             self.coolant_flow    = 100.0
             self._log(logging.CRITICAL, f"☢️  SCRAM AKTİF: {reason}")
-            print(f"\n[🚨 SCRAM] {reason}")
+            try:
+                print(f"\n[🚨 SCRAM] {reason}")
+            except UnicodeEncodeError:
+                print(f"\n[!!! SCRAM] {reason}")
 
     def reset_scram(self, authorized: bool = False):
         """SCRAM sıfırlama — yalnızca yetkili personel."""
@@ -442,6 +501,7 @@ class ReactorCore:
             power_mwth       = self.power_mwth,
             control_rod_pos  = self.control_rod_pos,
             coolant_flow_pct = self.coolant_flow,
+            fuel_temp_k      = self.fuel_temp,
             xenon_conc       = self.physics.xenon_conc,
             samarium_conc    = self.physics.samarium.samarium,
             burnup_mwdmt     = self.burnup_mwdmt,
@@ -451,6 +511,10 @@ class ReactorCore:
         )
         self._history.append(snap)
         self.telemetry.record(snap)
+        
+        # Veritabanına kaydet (her 10 adımda bir veya önemli olayda)
+        if self._step_count % 10 == 0:
+            self.db.save_state(snap)
         if len(self._history) > self._history_max:
             self._history.pop(0)
 
@@ -459,7 +523,9 @@ class ReactorCore:
         return {
             "reaktör":         self.config["reactor_name"],
             "süre_s":          f"{self._elapsed_s:.1f}",
-            "sıcaklık":        f"{self.temperature:.2f} K ({self.temperature - 273.15:.1f} °C)",
+            "sıcaklık_yakıt":  f"{self.fuel_temp:.2f} K",
+            "sıcaklık_soğutucu": f"{self.coolant_temp:.2f} K",
+            "sıcaklık":        f"{self.coolant_temp:.2f} K ({self.coolant_temp - 273.15:.1f} °C)",
             "basınç":          f"{self.pressure:.2f} bar",
             "nötron_akısı":    f"{self.neutron_flux:.3e} n/cm²·s",
             "güç":             f"{self.power_mwth:.2f} MWth",

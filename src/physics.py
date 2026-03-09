@@ -147,21 +147,37 @@ class ThermalHydraulics:
     """
     RHO_COOLANT   = 750.0   # Soğutucu yoğunluğu (kg/m³, su-buharlı karışım tahmini)
     CP_COOLANT    = 4200.0  # Özgül ısı kapasitesi (J/kg·K)
-    HA_CORE       = 3.5e6   # Çekirdek ısı transfer katsayısı × alan (W/K)
-    PASSIVE_UA    = 8.0e4   # Pasif soğutucu UApassif (W/K) — doğal sirkülasyon
     T_SINK        = 300.0   # Nihai ısı havuzu sıcaklığı (K) — çevre
+    HA_CORE       = 4.0e6   # Çekirdek ısı transfer katsayısı × alan (W/K)
+    PASSIVE_UA    = 5.0e5   # Isı havuzu UA (W/K) — 150MW@300K deltaT için
+    C_FUEL        = 1.2e6   # Yakıt ısı kapasitesi (J/K) — (300J/kgK * 4000kg)
+    C_COOL        = 3.0e6   # Soğutucu ısı kapasitesi (J/K) — (4200J/kgK * 700kg)
 
-    def fuel_to_coolant(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
+    def fuel_and_coolant_dynamic(self, T_fuel: float, T_cool: float, power_mw: float, dt: float = 1.0):
         """
-        Yakıttan soğutucuya ısı transferi.
-        Q_gen = power_mw (termal)
-        Q_cool = HA * (T_cool - T_sink) — doğal sirkülasyon
+        2-Düğümlü (Fuel & Coolant) Isı Transferi Modeli.
+        - Yakıt (Node 1): Fisyon enerjisi üretir, soğutucuya ısı verir.
+        - Soğutucu (Node 2): Yakıttan ısı alır, çevreye/ısı havuzuna ısı verir.
         """
-        Q_gen    = power_mw * 1.0e6           # W
-        Q_remove = self.PASSIVE_UA * (T_cool - self.T_SINK)
-        Q_net    = Q_gen - Q_remove
-        dT_cool  = Q_net / (self.RHO_COOLANT * self.CP_COOLANT * 1.0) * dt
-        return max(self.T_SINK, T_cool + dT_cool)
+        Q_gen = power_mw * 1.0e6               # W (Fisyon gücü)
+        
+        # 1. Yakıttan Soğutucuya Transfer (Q = HA * (Tf - Tc))
+        # HA_CORE varsayılan 3.5e6 W/K
+        Q_to_coolant = self.HA_CORE * (T_fuel - T_cool)
+        
+        # Yakıt termal ataleti
+        dT_fuel = (Q_gen - Q_to_coolant) / self.C_FUEL * dt
+        
+        # 2. Soğutucudan Isı Havuzuna (Q = UA * (Tc - Tsink))
+        Q_to_sink = self.PASSIVE_UA * (T_cool - self.T_SINK)
+        
+        # Soğutucu termal ataleti
+        dT_cool = (Q_to_coolant - Q_to_sink) / self.C_COOL * dt
+
+        new_T_fuel = max(self.T_SINK, T_fuel + dT_fuel)
+        new_T_cool = max(self.T_SINK, T_cool + dT_cool)
+        
+        return new_T_fuel, new_T_cool
 
     def passive_cooling_available(self, T_cool: float) -> bool:
         """Pasif soğutma yeterli mi? (Havuz sıcaklığı < 90°C üstü = aktif)"""
@@ -217,43 +233,36 @@ class ReactorPhysics:
         self.xenon_conc  = self.xenon.xenon
         return rho_xe
 
-    def calculate_reactivity(self, rod_pos: float, temp: float,
+    def calculate_reactivity(self, rod_pos: float, T_fuel: float, T_cool: float,
                              flux: float, dt: float = 1.0, burnup: float = 0.0) -> float:
         """
         Toplam reaktivite hesabı (Δk/k).
 
-        ρ_tot = ρ_rod + ρ_Doppler + ρ_Xe135 + ρ_Sm149 + ρ_burnup
-
-        rod_pos : 0 (tam içeri) → 100 (tam dışarı) [%]
+        ρ_tot = ρ_rod + ρ_Doppler(Tf) + ρ_Mod(Tc) + ρ_Xe135 + ρ_Sm149 + ρ_burnup
         """
-        self.burnup_mwdmt_val = burnup # Temporarily store for ease of use in logic
-        # Kontrol çubuğu reaktivitesi
-        # Nötron değerini simüle etmek için sigmoid eğrisi
-        rod_worth_total = 0.12  # Toplam çubuk değeri ≈ 12% Δk/k (tipik PWR)
-        rod_fraction    = rod_pos / 100.0
-        # S-eğrisi: çubukların ortadaki hareketi daha etkili
-        rod_factor      = (math.sin(math.pi * rod_fraction) * 0.4
-                           + rod_fraction * 0.6)
+        self.burnup_mwdmt_val = burnup
+        # 1. Kontrol çubukları
+        rod_worth_total = 0.12
+        rod_fraction = rod_pos / 100.0
+        rod_factor = (math.sin(math.pi * rod_fraction) * 0.4 + rod_fraction * 0.6)
         rho_rod = rod_worth_total * (rod_factor - 0.5)
 
-        # Sıcaklık geri bildirimi
-        rho_temp = self.calculate_temp_feedback(temp)
+        # 2. Sıcaklık Geri Bildirimi ( Ayrıştırılmış)
+        T_ref = 563.0
+        rho_doppler = self.ALPHA_DOPPLER * (T_fuel - T_ref)
+        rho_moderator = self.ALPHA_MODERATOR * (T_cool - T_ref)
+        rho_temp = rho_doppler + rho_moderator
 
-        # Zehir reaktiviteleri
+        # 3. Zehirler ve Burnup
         rho_xe = self.xenon.step(flux, dt)
         rho_sm = self.samarium.step(flux, dt)
+        rho_burnup = - (self.burnup_mwdmt_val / 55000.0) * 0.05
 
-        # Yakıt tükenmesi (burnup) reaktivite kaybı
-        # Yakıt tükendikçe k_eff düşer (U-235 azalması + fisyon ürünleri birikimi)
-        # Lineer model: her 1000 MWd/MTU için ~50-100 pcm kayıp (basit yaklaşım)
-        rho_burnup = - (self.burnup_mwdmt_val / 55000.0) * 0.05  # Max %5 kayıp
-
-        # Güncelle uyumluluk değişkenleri
+        # Uyumluluk
         self.iodine_conc = self.xenon.iodine
         self.xenon_conc  = self.xenon.xenon
 
-        total_rho = rho_rod + rho_temp + rho_xe + rho_sm + rho_burnup
-        return total_rho
+        return rho_rod + rho_temp + rho_xe + rho_sm + rho_burnup
 
     def estimate_burnup_mwdmt(self, power_mw: float, time_days: float,
                               initial_mass_kg: float = 1200.0) -> float:

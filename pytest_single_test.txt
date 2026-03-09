@@ -1,0 +1,44 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\bahat\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: G:\Di­er bilgisayarlar\Diz³st³ Bilgisayar²m\github repolar²m\teknofest_nukleer
+plugins: anyio-4.12.1, langsmith-0.6.8
+collecting ... collected 1 item
+
+tests/test_core.py::TestPhysicsStep::test_history_populated FAILED
+
+================================== FAILURES ===================================
+___________________ TestPhysicsStep.test_history_populated ____________________
+
+self = <tests.test_core.TestPhysicsStep object at 0x0000015FB877F8D0>
+
+    def test_history_populated(self):
+        r = ReactorCore()
+        r.initialize_steady_state() # Dengeteki durum ile ba■la
+        for _ in range(5):
+>           r.step(dt=1.0)
+
+tests\test_core.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\reactor_core.py:365: in step
+    self._safety_check()
+src\reactor_core.py:404: in _safety_check
+    self._raise_alarm(AlarmLevel.HIGH,
+src\reactor_core.py:433: in _raise_alarm
+    print(f"\\n[\u26a0\ufe0f  ALARM L{level}] {msg}")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <encodings.cp1254.IncrementalEncoder object at 0x0000015FB2F457D0>
+input = '\\r\\n[\u26a0\ufe0f  ALARM L2] A\u015f\u0131r\u0131 g\xfc\xe7: 360.0 MWth > 300.0 MWth', final = False
+
+    def encode(self, input, final=False):
+>       return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       UnicodeEncodeError: 'charmap' codec can't encode characters in position 3-4: character maps to <undefined>
+
+C:\Users\bahat\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1254.py:19: UnicodeEncodeError
+------------------------------ Captured log call ------------------------------
+WARNING  ReactorCore:reactor_core.py:246 [ALARM L2] A■²r² g³: 360.0 MWth > 300.0 MWth
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::TestPhysicsStep::test_history_populated - UnicodeE...
+============================== 1 failed in 0.36s ==============================

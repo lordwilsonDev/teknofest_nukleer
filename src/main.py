@@ -18,10 +18,12 @@ def render_dashboard(reactor):
     
     # Status and Alarm Section
     scram_status = "\033[1;31mSAFE-SHUTDOWN (SCRAM)\033[0m" if reactor.scram_active else "\033[1;32mSTEADY-STATE\033[0m"
+    auto_pilot_status = "\033[1;32mACTIVE-AUTO\033[0m" if reactor.auto_pilot else "\033[1;33mMANUAL-MODE\033[0m"
     alarm_colors = {0: "\033[1;32mNORMAL\033[0m", 1: "\033[1;33mWARNING\033[0m", 2: "\033[1;31mHIGH-ALARM\033[0m", 3: "\033[1;41mSCRAM\033[0m"}
     alarm_str = alarm_colors.get(reactor.alarm_level, "UNKNOWN")
     
     print("\033[1;36m" + "║" + f" [CORE STATUS] {scram_status:<36}".center(38) + "║" + f" [ALARM LEVEL] {alarm_str:<37}".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "║" + f" [AUTO-PILOT]  {auto_pilot_status:<36}".center(38) + "║" + f" [PID TARGET]  {reactor.pid.setpoint:>10.1f} MW".center(39) + "║" + "\033[0m")
     print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
     
     # Power and Flux Section
@@ -29,8 +31,9 @@ def render_dashboard(reactor):
     print("\033[1;36m" + "║" + f" [BURNUP]        {status['burnup']:>20} ".center(38) + "║" + f" [ELAPSED TIME]  {status['süre_s']:>20} s".center(39) + "║" + "\033[0m")
     print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
     
-    # Temperature and Pressure Section
-    print("\033[1;36m" + "║" + f" [TEMPERATURE]   {status['sıcaklık']:>20} ".center(38) + "║" + f" [PRESSURE]      {status['basınç']:>20} ".center(39) + "║" + "\033[0m")
+    # Temperature and Pressure Section (2-Node)
+    print("\033[1;36m" + "║" + f" [FUEL TEMP]     {status['sıcaklık_yakıt']:>20} ".center(38) + "║" + f" [PRESSURE]      {status['basınç']:>20} ".center(39) + "║" + "\033[0m")
+    print("\033[1;36m" + "║" + f" [COOLANT TEMP]   {status['sıcaklık_soğutucu']:>20} ".center(38) + "║" + f" [SINK TEMP]      {reactor.physics.thermo.T_SINK:>10.1f} K".center(39) + "║" + "\033[0m")
     print("\033[1;36m" + "╠" + "═" * 38 + "╬" + "═" * 39 + "╣" + "\033[0m")
     
     # Poisoning and Reactivity
@@ -45,22 +48,33 @@ def render_dashboard(reactor):
     print("\033[1;36m║\033[0m" + f" [COOLANT FLOW]  [{flow_line}] {status['soğutucu_akış']}".center(78) + "\033[1;36m║\033[0m")
     
     print("\033[1;36m" + "╚" + "═" * 78 + "╝" + "\033[0m")
-    print("\033[1;37m" + " Commands: [R <0-100>] Rods | [C <0-100>] Flow | [S] SCRAM | [Q] Quit".center(80) + "\033[0m")
+    print("\033[1;37m" + " Commands: [R <0-100>] Rods | [C <0-100>] Flow | [A <MW>] Auto-Pilot | [S] SCRAM | [Q] Quit".center(80) + "\033[0m")
 
 def control_thread(reactor):
-    while not reactor.scram_active:
+    while True:
         try:
-            cmd = input().strip().upper()
-            if cmd.startswith('R'):
-                val = int(cmd.split()[1])
+            cmd_input = input().strip().upper()
+            if not cmd_input: continue
+            
+            parts = cmd_input.split()
+            cmd = parts[0]
+            
+            if cmd == 'R' and len(parts) > 1:
+                val = float(parts[1])
                 reactor.update_control_rods(val)
-            elif cmd.startswith('C'):
-                val = int(cmd.split()[1])
+                reactor.auto_pilot = False # Manuel müdahale autoyu kapatır
+            elif cmd == 'C' and len(parts) > 1:
+                val = float(parts[1])
                 reactor.update_coolant_flow(val)
+            elif cmd == 'A':
+                reactor.auto_pilot = not reactor.auto_pilot
+                if len(parts) > 1:
+                    reactor.pid.setpoint = float(parts[1])
+                if reactor.auto_pilot: reactor.pid.reset()
             elif cmd == 'S':
                 reactor.emergency_shutdown("MANUAL USER SCRAM")
             elif cmd == 'Q':
-                break
+                os._exit(0)
         except Exception:
             pass
 

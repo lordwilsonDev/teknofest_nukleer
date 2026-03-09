@@ -203,6 +203,18 @@ Rakip analizinden çıkan somut öncelikler:
 
 ---
 
+### 🧪 6. Gelişmiş Özellikler ve Yenilikler (Mart 2026 Güncellemesi)
+
+Bu sürümle birlikte simülasyona aşağıdaki kritik mühendislik bileşenleri eklenmiştir:
+
+*   **Gelişmiş Xenon-135 ve Samarium-149 Modeli:** Bateman denklemleri kullanılarak Xe-pit (peak) reaktivite cezaları daha gerçekçi hesaplanmaktadır.
+*   **Dinamik Yakıt Tükenmesi (Burnup):** Yakıtın kullanım ömrü boyunca maruz kaldığı reaktivite kaybı ve $k_{eff}$ düşüşü lineer olmayan modellerle simüle edilmektedir.
+*   **Gelişmiş Telemetri Sistemi:** Reaktörün tüm hayati parametreleri anlık olarak `Telemetry` sınıfı tarafından tamponlanmakta ve trend analizi için saklanmaktadır.
+*   **Konfigürasyon Doğrulama:** Başlatma sırasında tüm kritik parametrelerin varlığı ve geçerliliği kontrol edilerek sistem güvenilirliği artırılmıştır.
+*   **Premium Dashboard:** Terminal üzerinde zenginleştirilmiş ASCII art ve renkli ANSI kodları ile modern bir kontrol merkezi arayüzü sunulmaktadır.
+
+---
+
 <div align="center">
   <p><b>SKYGUARD AMR-OS | Nükleer Enerji Division</b><br />Mühendislik, Emniyet ve İnovasyon</p>
 </div>

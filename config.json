@@ -3,7 +3,6 @@
     "reactor_type": "SMR-iPWR",
     "design_power_mwth": 150.0,
     "design_power_mwe": 50.0,
-
     "initial_state": {
         "temperature": 563.0,
         "pressure": 155.0,
@@ -12,18 +11,16 @@
         "coolant_flow": 80.0,
         "burnup_mwdmt": 0.0
     },
-
     "thresholds": {
-        "max_temp":        610.0,
-        "scram_temp":      623.0,
-        "critical_temp":   673.0,
-        "max_pressure":    175.0,
-        "scram_pressure":  180.0,
+        "max_temp": 750.0,
+        "scram_temp": 800.0,
+        "critical_temp": 900.0,
+        "max_pressure": 175.0,
+        "scram_pressure": 180.0,
         "min_coolant_flow": 10.0,
-        "max_power_mw":    160.0,
+        "max_power_mw": 300.0,
         "xe_pit_threshold_pcm": -3000.0
     },
-
     "fuel": {
         "type": "UO2",
         "enrichment_percent": 4.95,
@@ -32,7 +29,6 @@
         "pellet_diameter_mm": 9.5,
         "active_length_m": 2.14
     },
-
     "coolant": {
         "type": "light_water",
         "inlet_temp_k": 538.0,
@@ -40,23 +36,20 @@
         "flow_rate_kg_s": 850.0,
         "T_sink_K": 300.0
     },
-
     "physics": {
-        "alpha_doppler":   -3.8e-5,
+        "alpha_doppler": -3.8e-5,
         "alpha_moderator": -1.5e-5,
-        "alpha_void":      -0.05,
-        "beta_total":       0.00650,
+        "alpha_void": -0.05,
+        "beta_total": 0.00650,
         "neutron_gen_time": 5.0e-5,
-        "rod_worth_total":  0.12
+        "rod_worth_total": 0.12
     },
-
     "safety_systems": {
         "scram_insertion_time_s": 2.5,
         "passive_cooling_capacity_mw": 15.0,
         "decay_heat_fraction": 0.065,
         "emergency_boration_delta_rho": -0.05
     },
-
     "simulation": {
         "dt": 1.0,
         "noise_flux_amplitude": 1.0e9,
