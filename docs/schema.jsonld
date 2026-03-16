@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Dataset",
+  "name": "Teknofest Reactor Simulation Output",
+  "description": "High-fidelity reactor physics and thermal-hydraulic results for the 2025-2026 competition.",
+  "license": "Sovereign Stack License (Internal)",
+  "variableMeasured": [
+    {
+      "@type": "PropertyValue",
+      "name": "Peak Cladding Temperature (PCT)",
+      "unitText": "Celsius",
+      "maxValue": 1200
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "Reactivity Temperature Coefficient",
+      "unitText": "dk/K",
+      "maxValue": 0
+    }
+  ],
+  "isAccessibleForFree": false,
+  "measurementTechnique": "Coupled Neutronics-Thermal Hydraulics Simulation (Monte Carlo + CFD)",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "Simulation UUID",
+    "value": "uuid-v4-placeholder"
+  }
+}
