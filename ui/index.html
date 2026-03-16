@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Reactor HUD | TEKNOFEST 2026</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-container">
+        <header>
+            <div class="logo">TEKNOFEST.NUCLEAR [SVRGN]</div>
+            <div class="status-badge" id="safety-status">Status: Nominal</div>
+        </header>
+
+        <main>
+            <!-- Left Panel: Neutronics -->
+            <section class="panel">
+                <div class="panel-header">NEUTRONICS DATA</div>
+                <div class="metric-card">
+                    <div class="metric-label">CORE REACTIVITY (ρ)</div>
+                    <div class="metric-value">-0.0042 <span class="metric-unit">dk/K</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">NEUTRON FLUX (ϕ)</div>
+                    <div class="metric-value">1.42e13 <span class="metric-unit">n/cm²s</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">SHUTDOWN MARGIN</div>
+                    <div class="metric-value">0.08 <span class="metric-unit">Δk/k</span></div>
+                </div>
+            </section>
+
+            <!-- Center Panel: Core Visualization -->
+            <section class="core-viz">
+                <svg class="reactor-core-svg" viewBox="0 0 100 100">
+                    <!-- Reactor Shell -->
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(240, 246, 252, 0.1)" stroke-width="0.5" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(240, 246, 252, 0.05)" stroke-width="1" />
+                    
+                    <!-- Control Rods -->
+                    <g id="rods-group">
+                        <!-- Rod points -->
+                        <rect class="rod" x="48" y="20" width="4" height="60" fill="rgba(35, 134, 54, 0.2)" stroke="var(--primary-glow)" stroke-width="0.2" />
+                        <rect class="rod" x="20" y="48" width="60" height="4" fill="rgba(35, 134, 54, 0.2)" stroke="var(--primary-glow)" stroke-width="0.2" />
+                    </g>
+
+                    <!-- Core Center Glow -->
+                    <circle cx="50" cy="50" r="5" fill="var(--primary-glow)">
+                        <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                </svg>
+            </section>
+
+            <!-- Right Panel: Thermal-Hydraulics -->
+            <section class="panel">
+                <div class="panel-header">THERMAL-HYDRAULICS</div>
+                <div class="metric-card">
+                    <div class="metric-label">PEAK CLADDING TEMP (PCT)</div>
+                    <div class="metric-value" id="pct-value">482.4 <span class="metric-unit">°C</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">COOLANT MASS FLOW</div>
+                    <div class="metric-value">12.5 <span class="metric-unit">kg/s</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">OUTLET TEMPERATURE</div>
+                    <div class="metric-value">312.0 <span class="metric-unit">°C</span></div>
+                </div>
+                <div class="metric-card" style="margin-top: auto;">
+                    <button id="scram-btn" style="width: 100%; padding: 1rem; background: var(--danger-glow); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">MANUAL SCRAM</button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
